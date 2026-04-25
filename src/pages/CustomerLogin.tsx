@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { customers } from '../data/customers';
 
 const CustomerLogin = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const CustomerLogin = () => {
         setError(result?.error || 'Invalid credentials');
       }
     } catch (err: any) {
-      setError(err?.message || err?.error || 'An error occurred. Please try again.');
+      setError(err?.message || 'Unable to login. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -122,8 +123,25 @@ const CustomerLogin = () => {
             </button>
           </form>
 
-          <div className="login-hint">
-            &#x1F4A1; Demo password: <strong>0000</strong>
+          <div className="login-demo-box">
+            <h4>&#x1F4A1; Demo Credentials</h4>
+            <p>Use any of these National IDs with password: <strong>0000</strong></p>
+            <div className="demo-ids">
+              {customers.map((c) => (
+                <button 
+                  key={c.CustomerID} 
+                  type="button"
+                  className="demo-id-btn"
+                  onClick={() => {
+                    setNationalId(c.NationalID);
+                    setPassword('0000');
+                  }}
+                >
+                  <span className="demo-id-name">{c.FirstName} {c.LastName}</span>
+                  <span className="demo-id-value">{c.NationalID}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="login-footer">

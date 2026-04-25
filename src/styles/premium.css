@@ -347,6 +347,70 @@ body {
   color: var(--accent-green);
 }
 
+.login-demo-box {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius-md);
+}
+
+.login-demo-box h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-blue-light);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.login-demo-box p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.login-demo-box strong {
+  color: var(--accent-green);
+}
+
+.demo-ids {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.demo-id-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 0.875rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.demo-id-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-blue);
+}
+
+.demo-id-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.demo-id-value {
+  font-size: 0.75rem;
+  font-family: 'SF Mono', Monaco, monospace;
+  color: var(--accent-blue-light);
+}
+
 /* Premium Sidebar */
 .sidebar {
   width: 280px;

@@ -1,14 +1,7 @@
-import axios from 'axios';
+import { customers, customerPhones } from '../data/customers';
 import { employees, managerDetails, tellerDetails, clerkDetails } from '../data/employees';
 import { departments } from '../data/departments';
 import { branches } from '../data/branches';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 const getEmployeeRole = (employeeId: number) => {
   const manager = managerDetails.find(m => m.EmployeeID === employeeId);
@@ -26,67 +19,119 @@ const getEmployeeRole = (employeeId: number) => {
 const api = {
   login: {
     customer: async (nationalId: string, password: string) => {
-      try {
-        const response = await axios.post(`${API_URL}/login/customer`, { nationalId, password });
-        if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-        }
-        return response.data;
-      } catch (error: any) {
-        if (error.response) {
-          return { error: error.response.data.error || 'Invalid credentials' };
-        }
-        console.error('Customer login error:', error);
-        return { error: 'Unable to connect to server' };
+      console.log('Customer login attempt:', { nationalId, password });
+      
+      const inputId = String(nationalId).trim();
+      
+      const customer = customers.find(c => String(c.NationalID) === inputId);
+      
+      if (!customer) {
+        console.log('Customer not found:', inputId, 'Available IDs:', customers.map(c => c.NationalID));
+        return { error: 'Invalid credentials' };
       }
+      
+      console.log('Customer found:', customer.FirstName, customer.LastName);
+      
+      if (password !== '0000') {
+        console.log('Invalid password for customer:', customer.CustomerID);
+        return { error: 'Invalid credentials' };
+      }
+      
+      console.log('Login successful for customer:', customer.CustomerID);
+      
+      const phones = customerPhones
+        .filter(p => p.CustomerID === customer.CustomerID)
+        .map(p => p.Phone);
+      
+      const token = btoa(JSON.stringify({ id: customer.CustomerID, type: 'customer' }));
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({
+        id: customer.CustomerID,
+        type: 'customer',
+        name: `${customer.FirstName} ${customer.LastName}`,
+        firstName: customer.FirstName,
+        lastName: customer.LastName,
+        nationalId: customer.NationalID,
+        gender: customer.Gender,
+        street: customer.Street,
+        area: customer.Area,
+        state: customer.State,
+        dateOfBirth: customer.DateOfBirth,
+        phones,
+      }));
+      
+      return {
+        token,
+        user: {
+          id: customer.CustomerID,
+          type: 'customer' as const,
+          name: `${customer.FirstName} ${customer.LastName}`,
+          firstName: customer.FirstName,
+          lastName: customer.LastName,
+          nationalId: customer.NationalID,
+          gender: customer.Gender,
+          street: customer.Street,
+          area: customer.Area,
+          state: customer.State,
+          dateOfBirth: customer.DateOfBirth,
+          phones,
+        }
+      };
     },
+    
     employee: async (employeeId: string, password: string) => {
       console.log('Employee login attempt:', { employeeId, password });
       
-      try {
-        const response = await axios.post(`${API_URL}/login/employee`, { employeeId, password }, { timeout: 5000 });
-        if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-        }
-        return response.data;
-      } catch (error: any) {
-        console.log('Backend login failed, using local data fallback');
-        
-        const inputId = employeeId.trim();
-        const empId = parseInt(inputId);
-        
-        if (isNaN(empId)) {
-          console.log('Invalid employee ID format:', inputId);
-          return { error: 'Invalid credentials' };
-        }
-        
-        const employee = employees.find(e => e.EmployeeID === empId);
-        
-        if (!employee) {
-          console.log('Employee not found:', empId, 'Available IDs:', employees.map(e => e.EmployeeID));
-          return { error: 'Invalid credentials' };
-        }
-        
-        console.log('Employee found:', employee.FirstName, employee.LastName);
-        
-        if (password !== '0000') {
-          console.log('Invalid password for employee:', empId);
-          return { error: 'Invalid credentials' };
-        }
-        
-        console.log('Login successful for employee:', empId);
-        
-        const role = getEmployeeRole(employee.EmployeeID);
-        const dept = departments.find(d => d.DepartmentID === employee.DepartmentID);
-        const branch = dept ? branches.find(b => b.BranchID === dept.BranchID) : null;
-        
-        const token = btoa(JSON.stringify({ id: employee.EmployeeID, type: 'employee' }));
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify({
+      const inputId = String(employeeId).trim();
+      const empIdNum = parseInt(inputId);
+      
+      if (isNaN(empIdNum)) {
+        console.log('Invalid employee ID format:', inputId);
+        return { error: 'Invalid credentials' };
+      }
+      
+      const employee = employees.find(e => String(e.EmployeeID) === inputId);
+      
+      if (!employee) {
+        console.log('Employee not found:', inputId, 'Available IDs:', employees.map(e => e.EmployeeID));
+        return { error: 'Invalid credentials' };
+      }
+      
+      console.log('Employee found:', employee.FirstName, employee.LastName);
+      
+      if (password !== '0000') {
+        console.log('Invalid password for employee:', employee.EmployeeID);
+        return { error: 'Invalid credentials' };
+      }
+      
+      console.log('Login successful for employee:', employee.EmployeeID);
+      
+      const role = getEmployeeRole(employee.EmployeeID);
+      const dept = departments.find(d => d.DepartmentID === employee.DepartmentID);
+      const branch = dept ? branches.find(b => b.BranchID === dept.BranchID) : null;
+      
+      const token = btoa(JSON.stringify({ id: employee.EmployeeID, type: 'employee' }));
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({
+        id: employee.EmployeeID,
+        type: 'employee',
+        name: `${employee.FirstName} ${employee.LastName}`,
+        firstName: employee.FirstName,
+        lastName: employee.LastName,
+        gender: employee.Gender,
+        salary: employee.Salary,
+        departmentId: employee.DepartmentID,
+        departmentName: dept?.DepartmentName,
+        branchId: branch?.BranchID,
+        branchName: branch?.BranchName,
+        ...role,
+      }));
+      
+      return {
+        token,
+        user: {
           id: employee.EmployeeID,
-          type: 'employee',
+          type: 'employee' as const,
           name: `${employee.FirstName} ${employee.LastName}`,
           firstName: employee.FirstName,
           lastName: employee.LastName,
@@ -97,168 +142,8 @@ const api = {
           branchId: branch?.BranchID,
           branchName: branch?.BranchName,
           ...role,
-        }));
-        
-        return {
-          token,
-          user: {
-            id: employee.EmployeeID,
-            type: 'employee' as const,
-            name: `${employee.FirstName} ${employee.LastName}`,
-            firstName: employee.FirstName,
-            lastName: employee.LastName,
-            gender: employee.Gender,
-            salary: employee.Salary,
-            departmentId: employee.DepartmentID,
-            departmentName: dept?.DepartmentName,
-            branchId: branch?.BranchID,
-            branchName: branch?.BranchName,
-            ...role,
-          }
-        };
-      }
-    },
-  },
-  
-  customer: {
-    getProfile: async () => {
-      const response = await axios.get(`${API_URL}/customer/profile`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getAccounts: async () => {
-      const response = await axios.get(`${API_URL}/customer/accounts`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getTransactions: async (accountId: number) => {
-      const response = await axios.get(`${API_URL}/customer/accounts/${accountId}/transactions`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    deposit: async (accountId: number, amount: number, atmId?: number) => {
-      const response = await axios.post(`${API_URL}/customer/deposit`, { accountId, amount, atmId }, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    withdraw: async (accountId: number, amount: number, atmId?: number) => {
-      const response = await axios.post(`${API_URL}/customer/withdraw`, { accountId, amount, atmId }, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    transfer: async (fromAccountId: number, toAccountId: number, amount: number) => {
-      const response = await axios.post(`${API_URL}/customer/transfer`, { fromAccountId, toAccountId, amount }, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getLoans: async () => {
-      const response = await axios.get(`${API_URL}/customer/loans`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    createLoan: async (amount: number) => {
-      const response = await axios.post(`${API_URL}/customer/loans`, { amount }, { headers: getAuthHeaders() });
-      return response.data;
-    },
-  },
-  
-  admin: {
-    getCustomers: async () => {
-      const response = await axios.get(`${API_URL}/admin/customers`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    createCustomer: async (data: any) => {
-      const response = await axios.post(`${API_URL}/admin/customers`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    updateCustomer: async (id: number, data: any) => {
-      const response = await axios.put(`${API_URL}/admin/customers/${id}`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    deleteCustomer: async (id: number) => {
-      const response = await axios.delete(`${API_URL}/admin/customers/${id}`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getAccounts: async () => {
-      const response = await axios.get(`${API_URL}/admin/accounts`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    createAccount: async (data: any) => {
-      const response = await axios.post(`${API_URL}/admin/accounts`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    deleteAccount: async (id: number) => {
-      const response = await axios.delete(`${API_URL}/admin/accounts/${id}`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getEmployees: async () => {
-      const response = await axios.get(`${API_URL}/admin/employees`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    createEmployee: async (data: any) => {
-      const response = await axios.post(`${API_URL}/admin/employees`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    updateEmployee: async (id: number, data: any) => {
-      const response = await axios.put(`${API_URL}/admin/employees/${id}`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    deleteEmployee: async (id: number) => {
-      const response = await axios.delete(`${API_URL}/admin/employees/${id}`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getBranches: async () => {
-      const response = await axios.get(`${API_URL}/admin/branches`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    createBranch: async (data: any) => {
-      const response = await axios.post(`${API_URL}/admin/branches`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    updateBranch: async (id: number, data: any) => {
-      const response = await axios.put(`${API_URL}/admin/branches/${id}`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    deleteBranch: async (id: number) => {
-      const response = await axios.delete(`${API_URL}/admin/branches/${id}`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getDepartments: async () => {
-      const response = await axios.get(`${API_URL}/admin/departments`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    createDepartment: async (data: any) => {
-      const response = await axios.post(`${API_URL}/admin/departments`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    updateDepartment: async (id: number, data: any) => {
-      const response = await axios.put(`${API_URL}/admin/departments/${id}`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    deleteDepartment: async (id: number) => {
-      const response = await axios.delete(`${API_URL}/admin/departments/${id}`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getATMs: async () => {
-      const response = await axios.get(`${API_URL}/admin/atms`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    createATM: async (data: any) => {
-      const response = await axios.post(`${API_URL}/admin/atms`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    updateATM: async (id: number, data: any) => {
-      const response = await axios.put(`${API_URL}/admin/atms/${id}`, data, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    deleteATM: async (id: number) => {
-      const response = await axios.delete(`${API_URL}/admin/atms/${id}`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getTransactions: async () => {
-      const response = await axios.get(`${API_URL}/admin/transactions`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    getLoans: async () => {
-      const response = await axios.get(`${API_URL}/admin/loans`, { headers: getAuthHeaders() });
-      return response.data;
-    },
-    updateLoan: async (id: number, data: any) => {
-      const response = await axios.put(`${API_URL}/admin/loans/${id}`, data, { headers: getAuthHeaders() });
-      return response.data;
+        }
+      };
     },
   },
 };
