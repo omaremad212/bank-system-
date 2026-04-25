@@ -12,6 +12,7 @@ export const managerDetails = [
 
 export const tellerDetails = [
   { EmployeeID: 3, BranchLocation: 'Cairo, Egypt', TellerID: 'TEL-001' },
+  { EmployeeID: 5, BranchLocation: 'Alexandria, Egypt', TellerID: 'TEL-002' },
 ];
 
 export const clerkDetails = [

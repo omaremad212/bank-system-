@@ -18,37 +18,81 @@ const EmployeeDashboard = () => {
   };
 
   const role = user?.roleType || 'Employee';
-  const isManager = role === 'Manager';
-  const isClerk = role === 'Clerk';
-  const isTeller = role === 'Teller';
+  
+  const getRolePrefix = () => {
+    switch (role) {
+      case 'Manager':
+      case 'Branch Manager':
+        return '/manager';
+      case 'Teller':
+        return '/teller';
+      case 'Clerk':
+        return '/clerk';
+      case 'IT':
+        return '/it';
+      case 'Customer Service':
+        return '/customer-service';
+      case 'HR':
+        return '/hr';
+      default:
+        return '/employee';
+    }
+  };
+
+  const rolePrefix = getRolePrefix();
 
   const managerNavItems = [
-    { path: '/employee', label: 'Dashboard', icon: '\u2302', section: 'overview' },
-    { path: '/employee/customers', label: 'Customers', icon: '\u{1F465}', section: 'management' },
-    { path: '/employee/accounts', label: 'Accounts', icon: '\u{1F4B3}', section: 'management' },
-    { path: '/employee/transactions', label: 'Transactions', icon: '\u{1F4B0}', section: 'operations' },
-    { path: '/employee/loans', label: 'Loan Applications', icon: '\u{1F3E2}', section: 'operations' },
-    { path: '/employee/employees', label: 'Employees', icon: '\u{1F468}\u200D\u{1F4BB}', section: 'management' },
-    { path: '/employee/branches', label: 'Branches', icon: '\u{1F3E2}', section: 'infrastructure' },
-    { path: '/employee/atms', label: 'ATMs', icon: '\u{1F5FE}', section: 'infrastructure' },
-  ];
-
-  const clerkNavItems = [
-    { path: '/employee', label: 'Dashboard', icon: '\u2302', section: 'overview' },
-    { path: '/employee/customers', label: 'Customers', icon: '\u{1F465}', section: 'management' },
-    { path: '/employee/accounts', label: 'Accounts', icon: '\u{1F4B3}', section: 'management' },
+    { path: `${rolePrefix}/dashboard`, label: 'Dashboard', icon: '\u2302', section: 'overview' },
+    { path: `${rolePrefix}/customers`, label: 'Customers', icon: '\u{1F465}', section: 'management' },
+    { path: `${rolePrefix}/accounts`, label: 'Accounts', icon: '\u{1F4B3}', section: 'management' },
+    { path: `${rolePrefix}/transactions`, label: 'Transactions', icon: '\u{1F4B0}', section: 'operations' },
+    { path: `${rolePrefix}/loans`, label: 'Loan Applications', icon: '\u{1F3E2}', section: 'operations' },
+    { path: `${rolePrefix}/employees`, label: 'Employees', icon: '\u{1F468}\u200D\u{1F4BB}', section: 'management' },
+    { path: `${rolePrefix}/branches`, label: 'Branches', icon: '\u{1F3E2}', section: 'infrastructure' },
   ];
 
   const tellerNavItems = [
-    { path: '/employee', label: 'Dashboard', icon: '\u2302', section: 'overview' },
-    { path: '/employee/transactions', label: 'Transactions', icon: '\u{1F4B0}', section: 'operations' },
+    { path: `${rolePrefix}/dashboard`, label: 'Dashboard', icon: '\u2302', section: 'overview' },
+    { path: `${rolePrefix}/customers`, label: 'Customers', icon: '\u{1F465}', section: 'customers' },
+    { path: `${rolePrefix}/accounts`, label: 'Accounts', icon: '\u{1F4B3}', section: 'accounts' },
+    { path: `${rolePrefix}/transactions`, label: 'Transactions', icon: '\u{1F4B0}', section: 'operations' },
   ];
 
-  const navItems = isManager ? managerNavItems : isClerk ? clerkNavItems : tellerNavItems;
+  const itNavItems = [
+    { path: `${rolePrefix}/dashboard`, label: 'Dashboard', icon: '\u2302', section: 'overview' },
+  ];
 
-  const pageTitle = navItems.find(item => item.path === location.pathname)?.label || 'Dashboard';
-  const currentSection = navItems.find(item => item.path === location.pathname)?.section;
+  const csNavItems = [
+    { path: `${rolePrefix}/dashboard`, label: 'Dashboard', icon: '\u2302', section: 'overview' },
+    { path: `${rolePrefix}/customers`, label: 'Customers', icon: '\u{1F465}', section: 'customers' },
+  ];
 
+  const hrNavItems = [
+    { path: `${rolePrefix}/dashboard`, label: 'Dashboard', icon: '\u2302', section: 'overview' },
+    { path: `${rolePrefix}/employees`, label: 'Employees', icon: '\u{1F468}\u200D\u{1F4BB}', section: 'hr' },
+  ];
+
+  const getNavItems = () => {
+    switch (role) {
+      case 'Manager':
+      case 'Branch Manager':
+        return managerNavItems;
+      case 'Teller':
+        return tellerNavItems;
+      case 'IT':
+        return itNavItems;
+      case 'Customer Service':
+        return csNavItems;
+      case 'HR':
+        return hrNavItems;
+      default:
+        return managerNavItems;
+    }
+  };
+
+  const navItems = getNavItems();
+  const pageTitle = navItems.find(item => location.pathname === item.path)?.label || 'Dashboard';
+  const currentSection = navItems.find(item => location.pathname === item.path)?.section;
   const sections = [...new Set(navItems.map(item => item.section))];
 
   return (
@@ -69,6 +113,9 @@ const EmployeeDashboard = () => {
                 {section === 'overview' ? 'Overview' :
                  section === 'management' ? 'Management' :
                  section === 'operations' ? 'Operations' :
+                 section === 'customers' ? 'Customers' :
+                 section === 'accounts' ? 'Accounts' :
+                 section === 'hr' ? 'HR' :
                  'Infrastructure'}
               </div>
               {navItems.filter(item => item.section === section).map((item) => (

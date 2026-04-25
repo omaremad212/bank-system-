@@ -314,6 +314,18 @@ body {
   gap: 0.5rem;
 }
 
+.login-success {
+  padding: 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--accent-green);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .login-footer {
   margin-top: 2rem;
   padding-top: 1.5rem;
