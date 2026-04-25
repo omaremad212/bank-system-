@@ -58,14 +58,14 @@ const CustomerTransactions = () => {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="welcome-hero">
         <div>
           <h1>Transactions</h1>
           <p>View your transaction history</p>
         </div>
       </div>
 
-      <div className="card mb-3">
+      <div className="table-card mb-3">
         <div className="flex items-center gap-2">
           <label>Filter by Account:</label>
           <select
@@ -83,14 +83,13 @@ const CustomerTransactions = () => {
         </div>
       </div>
 
-      <div className="card">
+      <div className="table-card">
         {filteredTransactions.length === 0 ? (
           <div className="empty-state">
             <p>No transactions found</p>
           </div>
         ) : (
-          <div className="table-container">
-            <table>
+          <table>
               <thead>
                 <tr>
                   <th>Date</th>
@@ -120,7 +119,6 @@ const CustomerTransactions = () => {
                 })}
               </tbody>
             </table>
-          </div>
         )}
       </div>
     </div>

@@ -34,47 +34,104 @@ const EmployeeLogin = () => {
 
   return (
     <div className="login-page">
-      <div className="login-container">
-        <div className="login-logo">
-          <h1>Bank System</h1>
-          <p>Employee Login</p>
+      <div className="login-visual">
+        <div className="login-visual-content">
+          <div className="login-brand">
+            <div className="login-brand-icon">&#x1F3E6;</div>
+            <h1>PrimeBank</h1>
+          </div>
+          
+          <h2>Employee Portal</h2>
+          <p>Access the administrative dashboard to manage accounts, customers, and operations.</p>
+          
+          <div className="login-features">
+            <div className="login-feature">
+              <div className="login-feature-icon">&#x1F465;</div>
+              <div className="login-feature-text">
+                <h4>Customer Management</h4>
+                <p>Add, edit, and manage customer accounts</p>
+              </div>
+            </div>
+            <div className="login-feature">
+              <div className="login-feature-icon">&#x1F4CA;</div>
+              <div className="login-feature-text">
+                <h4>Real-time Analytics</h4>
+                <p>Monitor transactions and system performance</p>
+              </div>
+            </div>
+            <div className="login-feature">
+              <div className="login-feature-icon">&#x1F4B0;</div>
+              <div className="login-feature-text">
+                <h4>Loan Processing</h4>
+                <p>Review and approve loan applications</p>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        {error && <div className="error-message mb-2">{error}</div>}
-        
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Employee ID</label>
-            <input
-              type="text"
-              value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              placeholder="Enter your employee ID"
-              required
-            />
+      </div>
+
+      <div className="login-form-section">
+        <div className="login-card">
+          <div className="login-header">
+            <span className="login-header-label">Employee Portal</span>
+            <h2>Employee Login</h2>
+            <p>Sign in to access the admin dashboard</p>
           </div>
-          
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
+
+          {error && (
+            <div className="login-error">
+              <span>&#x26A0;</span>
+              {error}
+            </div>
+          )}
+
+          <form className="login-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Employee ID</label>
+              <div className="input-wrapper">
+                <span className="input-icon">&#x1F464;</span>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  placeholder="Enter your Employee ID"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Password</label>
+              <div className="input-wrapper">
+                <span className="input-icon">&#x1F512;</span>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
+              {!loading && <span>&#x2192;</span>}
+            </button>
+          </form>
+
+          <div className="login-hint">
+            &#x1F4A1; Demo password: <strong>0000</strong>
           </div>
-          
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-        
-        <div className="login-footer">
-          <p>
-            Are you a customer?{' '}
-            <a href="/login/customer">Login here</a>
-          </p>
+
+          <div className="login-footer">
+            <p>
+              Are you a customer?{' '}
+              <a href="/login/customer">Login here</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

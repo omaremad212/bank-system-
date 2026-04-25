@@ -28,22 +28,21 @@ const EmployeeCustomers = () => {
   }
 
   return (
-    <div>
-      <div className="page-header">
+<div>
+      <div className="welcome-hero">
         <div>
           <h1>Customers</h1>
           <p>Customer records with phone numbers</p>
         </div>
       </div>
 
-      <div className="card">
+      <div className="table-card">
         {customers.length === 0 ? (
           <div className="empty-state">
             <p>No customers found</p>
           </div>
-        ) : (
-          <div className="table-container">
-            <table>
+) : (
+          <table>
               <thead>
                 <tr>
                   <th>ID</th>
@@ -68,8 +67,7 @@ const EmployeeCustomers = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+</table>
         )}
       </div>
     </div>

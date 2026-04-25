@@ -39,22 +39,21 @@ const EmployeeTransactions = () => {
   }
 
   return (
-    <div>
-      <div className="page-header">
+<div>
+      <div className="welcome-hero">
         <div>
           <h1>Transactions</h1>
           <p>View all transaction history</p>
         </div>
       </div>
 
-      <div className="card">
+      <div className="table-card">
         {transactions.length === 0 ? (
           <div className="empty-state">
             <p>No transactions found</p>
           </div>
-        ) : (
-          <div className="table-container">
-            <table>
+) : (
+          <table>
               <thead>
                 <tr>
                   <th>ID</th>
@@ -81,8 +80,7 @@ const EmployeeTransactions = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+</table>
         )}
       </div>
     </div>

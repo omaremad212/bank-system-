@@ -18,14 +18,15 @@ const CustomerLogin = () => {
 
     try {
       const result = await api.login.customer(nationalId, password);
-      if (result.token && result.user) {
+      
+      if (result && result.token && result.user) {
         login(result.user);
         navigate('/customer');
       } else {
-        setError(result.error || 'Invalid credentials');
+        setError(result?.error || 'Invalid credentials');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'An error occurred. Please try again.');
+      setError(err?.message || err?.error || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -33,47 +34,104 @@ const CustomerLogin = () => {
 
   return (
     <div className="login-page">
-      <div className="login-container">
-        <div className="login-logo">
-          <h1>Bank System</h1>
-          <p>Customer Login</p>
+      <div className="login-visual">
+        <div className="login-visual-content">
+          <div className="login-brand">
+            <div className="login-brand-icon">&#x1F3E6;</div>
+            <h1>PrimeBank</h1>
+          </div>
+          
+          <h2>Welcome to Your Digital Banking Portal</h2>
+          <p>Manage your finances with our secure, modern banking platform designed for the way you live.</p>
+          
+          <div className="login-features">
+            <div className="login-feature">
+              <div className="login-feature-icon">&#x1F4B0;</div>
+              <div className="login-feature-text">
+                <h4>Instant Account Access</h4>
+                <p>View balances and transactions in real-time</p>
+              </div>
+            </div>
+            <div className="login-feature">
+              <div className="login-feature-icon">&#x1F4B3;</div>
+              <div className="login-feature-text">
+                <h4>Secure Money Transfers</h4>
+                <p>Send money anywhere with complete peace of mind</p>
+              </div>
+            </div>
+            <div className="login-feature">
+              <div className="login-feature-icon">&#x1F3E2;</div>
+              <div className="login-feature-text">
+                <h4>24/7 Customer Support</h4>
+                <p>We're always here to help with any questions</p>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        {error && <div className="error-message mb-2">{error}</div>}
-        
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>National ID</label>
-            <input
-              type="text"
-              value={nationalId}
-              onChange={(e) => setNationalId(e.target.value)}
-              placeholder="Enter your National ID"
-              required
-            />
+      </div>
+
+      <div className="login-form-section">
+        <div className="login-card">
+          <div className="login-header">
+            <span className="login-header-label">Customer Portal</span>
+            <h2>Welcome Back</h2>
+            <p>Sign in to access your accounts</p>
           </div>
-          
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
+
+          {error && (
+            <div className="login-error">
+              <span>&#x26A0;</span>
+              {error}
+            </div>
+          )}
+
+          <form className="login-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>National ID</label>
+              <div className="input-wrapper">
+                <span className="input-icon">&#x1F464;</span>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={nationalId}
+                  onChange={(e) => setNationalId(e.target.value)}
+                  placeholder="Enter your National ID"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Password</label>
+              <div className="input-wrapper">
+                <span className="input-icon">&#x1F512;</span>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
+              {!loading && <span>&#x2192;</span>}
+            </button>
+          </form>
+
+          <div className="login-hint">
+            &#x1F4A1; Demo password: <strong>0000</strong>
           </div>
-          
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-        
-        <div className="login-footer">
-          <p>
-            Are you an employee?{' '}
-            <a href="/login/employee">Login here</a>
-          </p>
+
+          <div className="login-footer">
+            <p>
+              Are you an employee?{' '}
+              <a href="/login/employee">Login here</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

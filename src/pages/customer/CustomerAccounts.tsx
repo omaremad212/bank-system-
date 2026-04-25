@@ -61,7 +61,8 @@ const CustomerAccounts = () => {
       const updatedAccounts = await api.customer.getAccounts();
       setAccounts(updatedAccounts);
     } catch (error: any) {
-      setMessage(error.response?.data?.error || 'Transaction failed. Please try again.');
+      setSuccess(false);
+      setMessage(error?.response?.data?.error || 'Transaction failed. Please try again.');
     }
   };
 
@@ -75,62 +76,68 @@ const CustomerAccounts = () => {
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h1>Your Accounts</h1>
-          <p>Manage your bank accounts</p>
-        </div>
+      <div className="welcome-hero">
+        <h1>Your Accounts</h1>
+        <p>Manage your bank accounts, deposit, withdraw, and transfer money</p>
       </div>
 
-      <div className="grid grid-2">
-        {accounts.map((account) => (
-          <div key={account.AccountID} className="card">
-            <div className="card-header">
-              <div>
-                <h3 className="card-title">{account.AccountNumber}</h3>
-                <p className="text-muted text-sm">Opened on {account.OpenDate}</p>
-              </div>
-              <span className={`account-type ${account.AccountTypeName?.toLowerCase() || account.AccountType?.toLowerCase()}`}>
-                {account.AccountTypeName || account.AccountType}
-              </span>
+      <div className="account-grid">
+        {accounts.length === 0 ? (
+          <div className="table-card">
+            <div className="empty-state">
+              <div className="empty-state-icon">&#x1F4B3;</div>
+              <h3>No Accounts Found</h3>
+              <p>You don't have any bank accounts yet.</p>
             </div>
-
-            <div className="mb-2">
-              <div className="account-balance">${(account.balance || 0).toLocaleString()}</div>
-              <div className="account-balance-label">Current Balance</div>
-            </div>
-
-            <div className="flex gap-1">
-              <button
-                className="btn btn-success"
-                onClick={() => handleAction(account, 'deposit')}
-              >
-                Deposit
-              </button>
-              <button
-                className="btn btn-danger"
-                onClick={() => handleAction(account, 'withdraw')}
-              >
-                Withdraw
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => handleAction(account, 'transfer')}
-              >
-                Transfer
-              </button>
-            </div>
-
-            {account.additional_info && (
-              <div className="mt-2 text-sm text-muted">
-                {account.AccountTypeName === 'Savings' 
-                  ? `Interest Rate: ${account.additional_info}%`
-                  : `Overdraft Limit: $${account.additional_info}`
-                }
-              </div>
-            )}
           </div>
-        ))}
+        ) : (
+          accounts.map((account) => (
+            <div key={account.AccountID} className="account-card">
+              <div className="account-card-header">
+                <span className="account-card-number">{account.AccountNumber}</span>
+                <span className={`account-card-type ${(account.AccountType || 'savings').toLowerCase()}`}>
+                  {account.AccountType}
+                </span>
+              </div>
+              <div className="account-card-balance">
+                <div className="account-card-balance-label">Current Balance</div>
+                <div className="account-card-balance-value">
+                  ${(account.balance || 0).toLocaleString()}
+                </div>
+              </div>
+              <div className="account-card-details">
+                <div className="account-card-detail">
+                  <label>Interest Rate</label>
+                  <span>{account.interestRate ? `${account.interestRate}%` : account.overdraftLimit ? `Overdraft: $${account.overdraftLimit}` : '-'}</span>
+                </div>
+                <div className="account-card-detail">
+                  <label>Opened</label>
+                  <span>{account.OpenDate}</span>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  className="btn btn-success"
+                  onClick={() => handleAction(account, 'deposit')}
+                >
+                  <span>&#x2191;</span> Deposit
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleAction(account, 'withdraw')}
+                >
+                  <span>&#x2193;</span> Withdraw
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => handleAction(account, 'transfer')}
+                >
+                  <span>&#x1F4B0;</span> Transfer
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {showModal && (
@@ -139,23 +146,25 @@ const CustomerAccounts = () => {
             <div className="modal-header">
               <h3>{modalType.charAt(0).toUpperCase() + modalType.slice(1)}</h3>
               <button className="modal-close" onClick={() => setShowModal(false)}>
-                ×
+                &#x2715;
               </button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                <div className="form-group mb-2">
+                <div className="form-group mb-3">
                   <label>Account</label>
                   <input
                     type="text"
+                    className="form-input"
                     value={selectedAccount?.AccountNumber || ''}
                     disabled
                   />
                 </div>
-                <div className="form-group mb-2">
-                  <label>Amount</label>
+                <div className="form-group mb-3">
+                  <label>Amount ($)</label>
                   <input
                     type="number"
+                    className="form-input"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="Enter amount"
@@ -165,19 +174,21 @@ const CustomerAccounts = () => {
                   />
                 </div>
                 {modalType === 'transfer' && (
-                  <div className="form-group mb-2">
+                  <div className="form-group mb-3">
                     <label>Recipient Account ID</label>
                     <input
                       type="number"
+                      className="form-input"
                       value={recipientAccountId}
                       onChange={(e) => setRecipientAccountId(e.target.value)}
-                      placeholder="Enter recipient account ID"
+                      placeholder="Enter account ID"
                       required
                     />
                   </div>
                 )}
                 {message && (
-                  <div className={`badge ${success ? 'badge-success' : 'badge-danger'}`}>
+                  <div className={`login-error ${success ? 'login-success' : ''}`}>
+                    <span>{success ? '&#x2713;' : '&#x26A0;'}</span>
                     {message}
                   </div>
                 )}

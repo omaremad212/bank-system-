@@ -29,22 +29,21 @@ const EmployeeLoans = () => {
   }
 
   return (
-    <div>
-      <div className="page-header">
+<div>
+      <div className="welcome-hero">
         <div>
           <h1>Loan Applications</h1>
           <p>Manage loan applications</p>
         </div>
       </div>
 
-      <div className="card">
+      <div className="table-card">
         {loans.length === 0 ? (
           <div className="empty-state">
             <p>No loan applications found</p>
           </div>
-        ) : (
-          <div className="table-container">
-            <table>
+) : (
+          <table>
               <thead>
                 <tr>
                   <th>Application ID</th>
@@ -73,8 +72,7 @@ const EmployeeLoans = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+</table>
         )}
       </div>
     </div>

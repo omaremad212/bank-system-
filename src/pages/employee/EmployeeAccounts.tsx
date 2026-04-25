@@ -53,8 +53,8 @@ const EmployeeAccounts = () => {
   }
 
   return (
-    <div>
-      <div className="page-header">
+<div>
+      <div className="welcome-hero">
         <div>
           <h1>Accounts</h1>
           <p>Manage bank accounts</p>
@@ -64,14 +64,13 @@ const EmployeeAccounts = () => {
         </button>
       </div>
 
-      <div className="card">
+      <div className="table-card">
         {accounts.length === 0 ? (
           <div className="empty-state">
             <p>No accounts found</p>
           </div>
-        ) : (
-          <div className="table-container">
-            <table>
+) : (
+          <table>
               <thead>
                 <tr>
                   <th>Account ID</th>
@@ -100,8 +99,7 @@ const EmployeeAccounts = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+</table>
         )}
       </div>
 

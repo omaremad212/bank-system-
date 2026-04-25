@@ -29,22 +29,21 @@ const EmployeeATMs = () => {
   }
 
   return (
-    <div>
-      <div className="page-header">
+<div>
+      <div className="welcome-hero">
         <div>
           <h1>ATMs</h1>
           <p>Manage ATM machines</p>
         </div>
       </div>
 
-      <div className="card">
+      <div className="table-card">
         {atms.length === 0 ? (
           <div className="empty-state">
             <p>No ATMs found</p>
           </div>
-        ) : (
-          <div className="table-container">
-            <table>
+) : (
+          <table>
               <thead>
                 <tr>
                   <th>ATM ID</th>
@@ -69,8 +68,7 @@ const EmployeeATMs = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+</table>
         )}
       </div>
     </div>

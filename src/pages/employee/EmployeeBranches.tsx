@@ -29,18 +29,18 @@ const EmployeeBranches = () => {
   }
 
   return (
-    <div>
-      <div className="page-header">
+<div>
+      <div className="welcome-hero">
         <div>
           <h1>Branches</h1>
           <p>Manage bank branches</p>
         </div>
       </div>
 
-      <div className="grid grid-3">
+<div className="dashboard-grid">
         {branches.map((branch) => (
-          <div key={branch.BranchID} className="card">
-            <h3 className="card-title mb-2">{branch.BranchName}</h3>
+          <div key={branch.BranchID} className="table-card">
+            <h3 className="table-title mb-2">{branch.BranchName}</h3>
             <p className="text-muted text-sm mb-1">{branch.Location}</p>
             <p className="text-muted text-sm mb-1">{branch.Email}</p>
             <p className="text-sm">

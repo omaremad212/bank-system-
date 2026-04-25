@@ -52,7 +52,7 @@ const CustomerLoans = () => {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="welcome-hero">
         <div>
           <h1>Loans</h1>
           <p>View and manage your loan applications</p>
@@ -62,7 +62,7 @@ const CustomerLoans = () => {
         </button>
       </div>
 
-      <div className="grid grid-3 mb-3">
+      <div className="dashboard-grid mb-3">
         <div className="stat-card">
           <div className="stat-card-label">Total Loans</div>
           <div className="stat-card-value">{loans.length}</div>
@@ -81,7 +81,7 @@ const CustomerLoans = () => {
         </div>
       </div>
 
-      <div className="card">
+      <div className="table-card">
         {loans.length === 0 ? (
           <div className="empty-state">
             <p>No loan applications yet</p>
@@ -90,8 +90,7 @@ const CustomerLoans = () => {
             </button>
           </div>
         ) : (
-          <div className="table-container">
-            <table>
+          <table>
               <thead>
                 <tr>
                   <th>Application ID</th>
@@ -119,7 +118,6 @@ const CustomerLoans = () => {
                 ))}
               </tbody>
             </table>
-          </div>
         )}
       </div>
 
