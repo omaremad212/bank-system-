@@ -79,4 +79,9 @@ export interface User {
   name: string;
   nationalId?: string;
   email?: string;
+  roleType?: 'Manager' | 'Clerk' | 'Teller' | 'Employee';
+  departmentId?: number;
+  departmentName?: string;
+  branchId?: number;
+  branchName?: string;
 }
