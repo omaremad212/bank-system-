@@ -95,7 +95,17 @@ cd bank-system-
 npm install
 ```
 
-### 3. Run development server
+### 3. Set up MySQL database
+- Create a MySQL database named `banking_system`
+- Import the `banking_system.sql` file into your database
+- Copy `.env.example` to `.env` and update the database credentials
+
+### 4. Run the backend server
+```bash
+npm run server
+```
+
+### 5. Run the frontend
 ```bash
 npm run dev
 ```
@@ -113,12 +123,12 @@ npx vercel --prod
 
 ---
 
-## 🔑 Login Credentials (Mock)
+## 🔑 Login Credentials
 
 ### Customer Login
 - NationalID: 29901011234567
-- Password: password
+- Password: 0000
 
 ### Employee Login
 - Employee ID: 1
-- Password: password
+- Password: 0000
