@@ -95,7 +95,7 @@ const CustomerLogin = () => {
                   className="form-input"
                   value={nationalId}
                   onChange={(e) => setNationalId(e.target.value)}
-                  placeholder="Enter your National ID"
+                  placeholder="NationalID"
                   required
                 />
               </div>

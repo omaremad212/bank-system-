@@ -203,10 +203,11 @@ PORT=3000
 - **National ID**: `29808203456789` (Bassem Fathy)
 - **Password**: `0000` (for all customers)
 
-### Employee Login
+### Employee Login (use EmployeeID, not NationalID)
 - **Employee ID**: `1` (Mohamed Anwar - Branch Manager) - Full admin access
-- **Employee ID**: `2` (Sara Ali - Clerk)
-- **Employee ID**: `3` (Mahmoud Adel - Teller)
+- **Employee ID**: `2` (Sara Mohamed - Clerk)
+- **Employee ID**: `3` (Mohamed aqra - Teller)
+- **Employee ID**: `4` (Mona khaled - Clerk)
 - **Password**: `0000` (for all employees)
 
 ---

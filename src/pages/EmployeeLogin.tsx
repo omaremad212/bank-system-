@@ -95,7 +95,7 @@ const EmployeeLogin = () => {
                   className="form-input"
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
-                  placeholder="Enter your Employee ID"
+                  placeholder="EmployeeID (e.g. 1)"
                   required
                 />
               </div>
