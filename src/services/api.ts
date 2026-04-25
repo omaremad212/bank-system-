@@ -2,19 +2,17 @@ import axios from 'axios';
 
 const API_URL = '/api';
 
-const isDemoMode = true; 
-
 const DEMO_CUSTOMERS = [
-  { CustomerID: 1, NationalID: '29901011234567', FirstName: 'Mohamed', LastName: 'Youssef', Gender: 'Male', Street: '15 Nile St', Area: 'Dokki', State: 'Cairo', DateOfBirth: '1999-01-01' },
-  { CustomerID: 2, NationalID: '30005152345678', FirstName: 'Nour', LastName: 'Tarek', Gender: 'Female', Street: '22 Hassan St', Area: 'Sidi Gaber', State: 'Alexandria', DateOfBirth: '2000-05-15' },
-  { CustomerID: 3, NationalID: '29808203456789', FirstName: 'Bassem', LastName: 'Fathy', Gender: 'Male', Street: '8 Pyramids Rd', Area: 'Haram', State: 'Giza', DateOfBirth: '1998-08-20' },
+  { CustomerID: 1, NationalID: '29901011234567', FirstName: 'Mohamed', LastName: 'Youssef', Gender: 'Male', Street: '15 Nile St', Area: 'Dokki', State: 'Cairo', DateOfBirth: '1999-01-01', phones: ['01012345678', '01198765432'] },
+  { CustomerID: 2, NationalID: '30005152345678', FirstName: 'Nour', LastName: 'Tarek', Gender: 'Female', Street: '22 Hassan St', Area: 'Sidi Gaber', State: 'Alexandria', DateOfBirth: '2000-05-15', phones: ['01223456789'] },
+  { CustomerID: 3, NationalID: '29808203456789', FirstName: 'Bassem', LastName: 'Fathy', Gender: 'Male', Street: '8 Pyramids Rd', Area: 'Haram', State: 'Giza', DateOfBirth: '1998-08-20', phones: ['01534567890'] },
 ];
 
 const DEMO_ACCOUNTS = [
-  { AccountID: 1, AccountNumber: 'ACC-1001', OpenDate: '2020-01-10', AccountType: 'Savings', CustomerID: 1, BranchID: 1, balance: 5000 },
-  { AccountID: 2, AccountNumber: 'ACC-1002', OpenDate: '2021-03-15', AccountType: 'Checking', CustomerID: 1, BranchID: 1, balance: 2000 },
-  { AccountID: 3, AccountNumber: 'ACC-1003', OpenDate: '2019-07-20', AccountType: 'Savings', CustomerID: 2, BranchID: 2, balance: 3000 },
-  { AccountID: 4, AccountNumber: 'ACC-1004', OpenDate: '2022-11-05', AccountType: 'Checking', CustomerID: 3, BranchID: 3, balance: 500 },
+  { AccountID: 1, AccountNumber: 'ACC-1001', OpenDate: '2020-01-10', AccountType: 'Savings', CustomerID: 1, BranchID: 1, InterestRate: 5.50 },
+  { AccountID: 2, AccountNumber: 'ACC-1002', OpenDate: '2021-03-15', AccountType: 'Checking', CustomerID: 1, BranchID: 1, OverdraftLimit: 2000.00 },
+  { AccountID: 3, AccountNumber: 'ACC-1003', OpenDate: '2019-07-20', AccountType: 'Savings', CustomerID: 2, BranchID: 2, InterestRate: 4.75 },
+  { AccountID: 4, AccountNumber: 'ACC-1004', OpenDate: '2022-11-05', AccountType: 'Checking', CustomerID: 3, BranchID: 3, OverdraftLimit: 1500.00 },
 ];
 
 const DEMO_TRANSACTIONS = [
@@ -25,17 +23,17 @@ const DEMO_TRANSACTIONS = [
 ];
 
 const DEMO_LOANS = [
-  { ApplicationID: 1, AppDate: '2023-06-01', StartDate: '2023-07-01', EndDate: '2026-07-01', ApprovedAmt: 50000, CustomerID: 1, status: 'Approved' },
-  { ApplicationID: 2, AppDate: '2023-09-15', StartDate: '2023-10-01', EndDate: '2025-10-01', ApprovedAmt: 30000, CustomerID: 2, status: 'Approved' },
-  { ApplicationID: 3, AppDate: '2024-01-10', StartDate: '2024-02-01', EndDate: '2027-02-01', ApprovedAmt: 70000, CustomerID: 3, status: 'Approved' },
+  { ApplicationID: 1, AppDate: '2023-06-01', StartDate: '2023-07-01', EndDate: '2026-07-01', ApprovedAmt: 50000, CustomerID: 1 },
+  { ApplicationID: 2, AppDate: '2023-09-15', StartDate: '2023-10-01', EndDate: '2025-10-01', ApprovedAmt: 30000, CustomerID: 2 },
+  { ApplicationID: 3, AppDate: '2024-01-10', StartDate: '2024-02-01', EndDate: '2027-02-01', ApprovedAmt: 70000, CustomerID: 3 },
 ];
 
 const DEMO_EMPLOYEES = [
-  { EmployeeID: 1, FirstName: 'Mohamed', LastName: 'Anwar', Gender: 'Male', Salary: 15000, DepartmentID: 1 },
-  { EmployeeID: 2, FirstName: 'Sara', LastName: 'Mohamed', Gender: 'Female', Salary: 12000, DepartmentID: 2 },
-  { EmployeeID: 3, FirstName: 'Mohamed', LastName: 'aqra', Gender: 'Male', Salary: 10000, DepartmentID: 3 },
-  { EmployeeID: 4, FirstName: 'Mona', LastName: 'Khaled', Gender: 'Female', Salary: 11000, DepartmentID: 4 },
-  { EmployeeID: 5, FirstName: 'Mohamed', LastName: 'ayman', Gender: 'Male', Salary: 13000, DepartmentID: 1 },
+  { EmployeeID: 1, FirstName: 'Mohamed', LastName: 'Anwar', Gender: 'Male', Salary: 15000.00, DepartmentID: 1, jobTitle: 'Branch Manager' },
+  { EmployeeID: 2, FirstName: 'Sara', LastName: 'Mohamed', Gender: 'Female', Salary: 12000.00, DepartmentID: 2, clerkLevel: 'Senior Clerk' },
+  { EmployeeID: 3, FirstName: 'Mohamed', LastName: 'aqra', Gender: 'Male', Salary: 10000.00, DepartmentID: 3, branchLocation: 'Alexandria, Egypt', tellerID: 'TEL-001' },
+  { EmployeeID: 4, FirstName: 'Mona', LastName: 'Khaled', Gender: 'Female', Salary: 11000.00, DepartmentID: 4, branchLocation: 'Giza, Egypt', tellerID: 'TEL-002' },
+  { EmployeeID: 5, FirstName: 'Mohamed', LastName: 'ayman', Gender: 'Male', Salary: 13000.00, DepartmentID: 1, jobTitle: 'Department Manager' },
 ];
 
 const DEMO_BRANCHES = [
@@ -59,9 +57,10 @@ const DEMO_ATMS = [
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+const calculateBalance = (accountId: number) => {
+  return DEMO_TRANSACTIONS
+    .filter(t => t.AccountID === accountId)
+    .reduce((sum, t) => sum + (t.TransactionType === 'Deposit' ? t.Amount : -t.Amount), 0);
 };
 
 export const api = {
@@ -87,6 +86,12 @@ export const api = {
         nationalId: customer.NationalID,
         firstName: customer.FirstName,
         lastName: customer.LastName,
+        gender: customer.Gender,
+        street: customer.Street,
+        area: customer.Area,
+        state: customer.State,
+        dateOfBirth: customer.DateOfBirth,
+        phones: customer.phones,
       }));
       
       return { 
@@ -98,6 +103,12 @@ export const api = {
           nationalId: customer.NationalID,
           firstName: customer.FirstName,
           lastName: customer.LastName,
+          gender: customer.Gender,
+          street: customer.Street,
+          area: customer.Area,
+          state: customer.State,
+          dateOfBirth: customer.DateOfBirth,
+          phones: customer.phones,
         }
       };
     },
@@ -114,14 +125,34 @@ export const api = {
         return { success: false, error: 'Invalid Employee ID' };
       }
       
-      const token = btoa(JSON.stringify({ id: employee.EmployeeID, type: 'employee' }));
+      const employeeDetails = DEMO_EMPLOYEES.find(e => e.EmployeeID === empId);
+      let roleType = 'employee';
+      let roleDetails = null;
+      
+      if (empId === 1 || empId === 5) {
+        roleType = 'manager';
+        roleDetails = { jobTitle: employeeDetails?.jobTitle };
+      } else if (empId === 3 || empId === 4) {
+        roleType = 'teller';
+        roleDetails = { branchLocation: employeeDetails?.branchLocation, tellerID: employeeDetails?.tellerID };
+      } else {
+        roleType = 'clerk';
+        roleDetails = { clerkLevel: employeeDetails?.clerkLevel };
+      }
+      
+      const token = btoa(JSON.stringify({ id: employee.EmployeeID, type: 'employee', roleType }));
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify({
         id: employee.EmployeeID,
         type: 'employee',
+        roleType,
         name: `${employee.FirstName} ${employee.LastName}`,
         firstName: employee.FirstName,
         lastName: employee.LastName,
+        gender: employee.Gender,
+        salary: employee.Salary,
+        departmentId: employee.DepartmentID,
+        ...roleDetails,
       }));
       
       return { 
@@ -129,9 +160,14 @@ export const api = {
         user: {
           id: employee.EmployeeID,
           type: 'employee',
+          roleType,
           name: `${employee.FirstName} ${employee.LastName}`,
           firstName: employee.FirstName,
           lastName: employee.LastName,
+          gender: employee.Gender,
+          salary: employee.Salary,
+          departmentId: employee.DepartmentID,
+          ...roleDetails,
         }
       };
     },
@@ -141,19 +177,23 @@ export const api = {
     getProfile: async () => {
       await delay(200);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      return DEMO_CUSTOMERS.find(c => c.CustomerID === user.id) || DEMO_CUSTOMERS[0];
+      const customer = DEMO_CUSTOMERS.find(c => c.CustomerID === user.id) || DEMO_CUSTOMERS[0];
+      const phones = DEMO_CUSTOMERS.find(c => c.CustomerID === user.id)?.phones || [];
+      return { ...customer, phones };
     },
     getAccounts: async () => {
       await delay(300);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const accounts = DEMO_ACCOUNTS.filter(a => a.CustomerID === user.id);
-      return accounts.map(acc => ({
-        ...acc,
-        AccountTypeName: acc.AccountType,
-        balance: DEMO_TRANSACTIONS
-          .filter(t => t.AccountID === acc.AccountID)
-          .reduce((sum, t) => sum + (t.TransactionType === 'Deposit' ? t.Amount : -t.Amount), 0)
-      }));
+      return accounts.map(acc => {
+        const isSavings = DEMO_ACCOUNTS.some(s => s.AccountID === acc.AccountID && s.InterestRate !== undefined);
+        return {
+          ...acc,
+          AccountTypeName: acc.AccountType,
+          balance: calculateBalance(acc.AccountID),
+          additional_info: isSavings ? `Interest Rate: ${acc.InterestRate}%` : `Overdraft Limit: $${acc.OverdraftLimit}`,
+        };
+      });
     },
     getTransactions: async (accountId: number) => {
       await delay(200);
@@ -173,6 +213,14 @@ export const api = {
     },
     withdraw: async (accountId: number, amount: number) => {
       await delay(300);
+      const balance = calculateBalance(accountId);
+      const account = DEMO_ACCOUNTS.find(a => a.AccountID === accountId);
+      const maxWithdraw = balance + (account?.OverdraftLimit || 0);
+      
+      if (amount > maxWithdraw) {
+        return { success: false, error: 'Insufficient funds' };
+      }
+      
       DEMO_TRANSACTIONS.push({
         TransactionID: DEMO_TRANSACTIONS.length + 1,
         Amount: amount,
@@ -185,6 +233,14 @@ export const api = {
     },
     transfer: async (fromAccountId: number, toAccountId: number, amount: number) => {
       await delay(300);
+      const balance = calculateBalance(fromAccountId);
+      const account = DEMO_ACCOUNTS.find(a => a.AccountID === fromAccountId);
+      const maxWithdraw = balance + (account?.OverdraftLimit || 0);
+      
+      if (amount > maxWithdraw) {
+        return { success: false, error: 'Insufficient funds' };
+      }
+      
       DEMO_TRANSACTIONS.push({
         TransactionID: DEMO_TRANSACTIONS.length + 1,
         Amount: amount,
@@ -206,7 +262,11 @@ export const api = {
     getLoans: async () => {
       await delay(200);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      return DEMO_LOANS.filter(l => l.CustomerID === user.id);
+      const loans = DEMO_LOANS.filter(l => l.CustomerID === user.id);
+      return loans.map(loan => ({
+        ...loan,
+        status: loan.ApprovedAmt ? 'Approved' : 'Pending'
+      }));
     },
     createLoan: async (amount: number) => {
       await delay(300);
@@ -216,7 +276,6 @@ export const api = {
         AppDate: new Date().toISOString().split('T')[0],
         CustomerID: user.id,
         ApprovedAmt: amount,
-        status: 'Pending'
       });
       return { success: true, message: 'Loan application submitted' };
     },
@@ -225,21 +284,32 @@ export const api = {
   admin: {
     getCustomers: async () => {
       await delay(300);
-      return DEMO_CUSTOMERS;
+      return DEMO_CUSTOMERS.map(c => ({
+        ...c,
+        phones: c.phones,
+      }));
     },
     getAccounts: async () => {
       await delay(300);
-      return DEMO_ACCOUNTS.map(acc => ({
-        ...acc,
-        AccountTypeName: acc.AccountType,
-        balance: DEMO_TRANSACTIONS
-          .filter(t => t.AccountID === acc.AccountID)
-          .reduce((sum, t) => sum + (t.TransactionType === 'Deposit' ? t.Amount : -t.Amount), 0)
-      }));
+      return DEMO_ACCOUNTS.map(acc => {
+        const isSavings = acc.InterestRate !== undefined;
+        return {
+          ...acc,
+          AccountTypeName: acc.AccountType,
+          balance: calculateBalance(acc.AccountID),
+          additional_info: isSavings ? `Interest Rate: ${acc.InterestRate}%` : `Overdraft Limit: $${acc.OverdraftLimit}`,
+        };
+      });
     },
     getEmployees: async () => {
       await delay(300);
-      return DEMO_EMPLOYEES;
+      return DEMO_EMPLOYEES.map(e => {
+        let roleType = 'employee';
+        if (e.EmployeeID === 1 || e.EmployeeID === 5) roleType = 'manager';
+        else if (e.EmployeeID === 3 || e.EmployeeID === 4) roleType = 'teller';
+        else roleType = 'clerk';
+        return { ...e, roleType };
+      });
     },
     getBranches: async () => {
       await delay(200);
@@ -259,7 +329,10 @@ export const api = {
     },
     getLoans: async () => {
       await delay(300);
-      return DEMO_LOANS;
+      return DEMO_LOANS.map(loan => ({
+        ...loan,
+        status: loan.ApprovedAmt ? 'Approved' : 'Pending'
+      }));
     },
     createAccount: async (customerId: number, accountType: string, branchId: number) => {
       await delay(300);
@@ -271,7 +344,7 @@ export const api = {
         AccountType: accountType,
         CustomerID: customerId,
         BranchID: branchId,
-        balance: 0
+        ...(accountType === 'Savings' ? { InterestRate: 5.0 } : { OverdraftLimit: 1000 }),
       });
       return { success: true, accountId: newId };
     },
