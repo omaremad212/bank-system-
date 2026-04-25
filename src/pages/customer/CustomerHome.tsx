@@ -54,7 +54,7 @@ const CustomerHome = () => {
           <div className="stat-card-value primary">{accounts.length}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card-label">Active Loans</div>
+          <div className="stat-card-label">Loan Applications</div>
           <div className="stat-card-value">{loans.length}</div>
         </div>
       </div>
@@ -73,14 +73,20 @@ const CustomerHome = () => {
               <div key={account.AccountID} className="account-card">
                 <div className="account-card-header">
                   <span className="account-number">{account.AccountNumber}</span>
-                  <span className={`account-type ${account.AccountTypeName?.toLowerCase() || account.AccountType?.toLowerCase()}`}>
-                    {account.AccountTypeName || account.AccountType}
+                  <span className={`account-type ${account.type?.toLowerCase() || account.AccountType?.toLowerCase()}`}>
+                    {account.type || account.AccountType}
                   </span>
                 </div>
                 <div className="account-balance">
                   ${(account.balance || 0).toLocaleString()}
                 </div>
                 <div className="account-balance-label">Current Balance</div>
+                {account.InterestRate && (
+                  <div className="text-sm text-muted">Interest Rate: {account.InterestRate}%</div>
+                )}
+                {account.OverdraftLimit && (
+                  <div className="text-sm text-muted">Overdraft Limit: ${account.OverdraftLimit}</div>
+                )}
               </div>
             ))
           )}
@@ -99,17 +105,17 @@ const CustomerHome = () => {
               <div key={loan.ApplicationID} className="account-card">
                 <div className="account-card-header">
                   <span className="account-number">Loan #{loan.ApplicationID}</span>
-                  <span className={`badge badge-${loan.status === 'Approved' ? 'success' : 'warning'}`}>
-                    {loan.status}
+                  <span className={`badge ${loan.ApprovedAmt ? 'badge-success' : 'badge-warning'}`}>
+                    {loan.ApprovedAmt ? 'Approved' : 'Pending'}
                   </span>
                 </div>
                 <div className="account-balance">
-                  ${loan.ApprovedAmt?.toLocaleString() || 'Pending'}
+                  ${loan.ApprovedAmt?.toLocaleString() || 'Amount not set'}
                 </div>
                 <div className="account-balance-label">
                   {loan.StartDate && loan.EndDate
                     ? `${loan.StartDate} - ${loan.EndDate}`
-                    : 'Pending approval'}
+                    : 'Processing'}
                 </div>
               </div>
             ))

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import { Customer } from '../../types';
 
 const EmployeeCustomers = () => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +32,7 @@ const EmployeeCustomers = () => {
       <div className="page-header">
         <div>
           <h1>Customers</h1>
-          <p>Manage customer accounts</p>
+          <p>Customer records with phone numbers</p>
         </div>
       </div>
 
@@ -53,21 +52,19 @@ const EmployeeCustomers = () => {
                   <th>Gender</th>
                   <th>Address</th>
                   <th>Date of Birth</th>
+                  <th>Phones</th>
                 </tr>
               </thead>
               <tbody>
                 {customers.map((customer) => (
                   <tr key={customer.CustomerID}>
                     <td>{customer.CustomerID}</td>
-                    <td>
-                      {customer.FirstName} {customer.LastName}
-                    </td>
+                    <td>{customer.FirstName} {customer.LastName}</td>
                     <td>{customer.NationalID}</td>
                     <td>{customer.Gender}</td>
-                    <td>
-                      {customer.Street}, {customer.Area}, {customer.State}
-                    </td>
+                    <td>{customer.Street}, {customer.Area}, {customer.State}</td>
                     <td>{customer.DateOfBirth}</td>
+                    <td>{customer.phones?.join(', ')}</td>
                   </tr>
                 ))}
               </tbody>

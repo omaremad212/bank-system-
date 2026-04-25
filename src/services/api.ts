@@ -1,66 +1,48 @@
 import axios from 'axios';
 
+import { branches } from '../data/branches';
+import { departments } from '../data/departments';
+import { employees, managerDetails, tellerDetails, clerkDetails } from '../data/employees';
+import { customers, customerPhones } from '../data/customers';
+import { bankAccounts, savingsAccounts, checkingAccounts } from '../data/accounts';
+import { transactions, atms } from '../data/transactions';
+import { loanApplications } from '../data/loans';
+
 const API_URL = '/api';
-
-const DEMO_CUSTOMERS = [
-  { CustomerID: 1, NationalID: '29901011234567', FirstName: 'Mohamed', LastName: 'Youssef', Gender: 'Male', Street: '15 Nile St', Area: 'Dokki', State: 'Cairo', DateOfBirth: '1999-01-01', phones: ['01012345678', '01198765432'] },
-  { CustomerID: 2, NationalID: '30005152345678', FirstName: 'Nour', LastName: 'Tarek', Gender: 'Female', Street: '22 Hassan St', Area: 'Sidi Gaber', State: 'Alexandria', DateOfBirth: '2000-05-15', phones: ['01223456789'] },
-  { CustomerID: 3, NationalID: '29808203456789', FirstName: 'Bassem', LastName: 'Fathy', Gender: 'Male', Street: '8 Pyramids Rd', Area: 'Haram', State: 'Giza', DateOfBirth: '1998-08-20', phones: ['01534567890'] },
-];
-
-const DEMO_ACCOUNTS = [
-  { AccountID: 1, AccountNumber: 'ACC-1001', OpenDate: '2020-01-10', AccountType: 'Savings', CustomerID: 1, BranchID: 1, InterestRate: 5.50 },
-  { AccountID: 2, AccountNumber: 'ACC-1002', OpenDate: '2021-03-15', AccountType: 'Checking', CustomerID: 1, BranchID: 1, OverdraftLimit: 2000.00 },
-  { AccountID: 3, AccountNumber: 'ACC-1003', OpenDate: '2019-07-20', AccountType: 'Savings', CustomerID: 2, BranchID: 2, InterestRate: 4.75 },
-  { AccountID: 4, AccountNumber: 'ACC-1004', OpenDate: '2022-11-05', AccountType: 'Checking', CustomerID: 3, BranchID: 3, OverdraftLimit: 1500.00 },
-];
-
-const DEMO_TRANSACTIONS = [
-  { TransactionID: 1, Amount: 5000, Date_Time: '2024-01-15T10:30:00', TransactionType: 'Deposit', AccountID: 1, ATMID: 1 },
-  { TransactionID: 2, Amount: 1000, Date_Time: '2024-02-10T14:00:00', TransactionType: 'Withdraw', AccountID: 2, ATMID: 1 },
-  { TransactionID: 3, Amount: 3000, Date_Time: '2024-03-05T09:15:00', TransactionType: 'Transfer', AccountID: 3, ATMID: 2 },
-  { TransactionID: 4, Amount: 500, Date_Time: '2024-04-01T16:45:00', TransactionType: 'Deposit', AccountID: 4, ATMID: 3 },
-];
-
-const DEMO_LOANS = [
-  { ApplicationID: 1, AppDate: '2023-06-01', StartDate: '2023-07-01', EndDate: '2026-07-01', ApprovedAmt: 50000, CustomerID: 1 },
-  { ApplicationID: 2, AppDate: '2023-09-15', StartDate: '2023-10-01', EndDate: '2025-10-01', ApprovedAmt: 30000, CustomerID: 2 },
-  { ApplicationID: 3, AppDate: '2024-01-10', StartDate: '2024-02-01', EndDate: '2027-02-01', ApprovedAmt: 70000, CustomerID: 3 },
-];
-
-const DEMO_EMPLOYEES = [
-  { EmployeeID: 1, FirstName: 'Mohamed', LastName: 'Anwar', Gender: 'Male', Salary: 15000.00, DepartmentID: 1, jobTitle: 'Branch Manager' },
-  { EmployeeID: 2, FirstName: 'Sara', LastName: 'Mohamed', Gender: 'Female', Salary: 12000.00, DepartmentID: 2, clerkLevel: 'Senior Clerk' },
-  { EmployeeID: 3, FirstName: 'Mohamed', LastName: 'aqra', Gender: 'Male', Salary: 10000.00, DepartmentID: 3, branchLocation: 'Alexandria, Egypt', tellerID: 'TEL-001' },
-  { EmployeeID: 4, FirstName: 'Mona', LastName: 'Khaled', Gender: 'Female', Salary: 11000.00, DepartmentID: 4, branchLocation: 'Giza, Egypt', tellerID: 'TEL-002' },
-  { EmployeeID: 5, FirstName: 'Mohamed', LastName: 'ayman', Gender: 'Male', Salary: 13000.00, DepartmentID: 1, jobTitle: 'Department Manager' },
-];
-
-const DEMO_BRANCHES = [
-  { BranchID: 1, BranchName: 'Cairo Main Branch', Location: 'Cairo, Egypt', Email: 'cairo@bank.com', EstablishedYear: 1990 },
-  { BranchID: 2, BranchName: 'Alexandria Branch', Location: 'Alexandria, Egypt', Email: 'alex@bank.com', EstablishedYear: 1995 },
-  { BranchID: 3, BranchName: 'Giza Branch', Location: 'Giza, Egypt', Email: 'giza@bank.com', EstablishedYear: 2000 },
-];
-
-const DEMO_DEPARTMENTS = [
-  { DepartmentID: 1, DepartmentName: 'HR Department', BranchID: 1 },
-  { DepartmentID: 2, DepartmentName: 'IT Department', BranchID: 1 },
-  { DepartmentID: 3, DepartmentName: 'Operations', BranchID: 2 },
-  { DepartmentID: 4, DepartmentName: 'Customer Service', BranchID: 3 },
-];
-
-const DEMO_ATMS = [
-  { ATMID: 1, Location: 'Cairo Main Entrance', InstallDate: '2015-03-10', Status: 'Active', BranchID: 1 },
-  { ATMID: 2, Location: 'Alexandria Mall', InstallDate: '2018-07-22', Status: 'Active', BranchID: 2 },
-  { ATMID: 3, Location: 'Giza Square', InstallDate: '2020-01-15', Status: 'Offline', BranchID: 3 },
-];
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const calculateBalance = (accountId: number) => {
-  return DEMO_TRANSACTIONS
+  return transactions
     .filter(t => t.AccountID === accountId)
     .reduce((sum, t) => sum + (t.TransactionType === 'Deposit' ? t.Amount : -t.Amount), 0);
+};
+
+const getAccountDetails = (accountId: number) => {
+  const savings = savingsAccounts.find(s => s.AccountID === accountId);
+  const checking = checkingAccounts.find(c => c.AccountID === accountId);
+  if (savings) return { type: 'Savings', ...savings };
+  if (checking) return { type: 'Checking', ...checking };
+  return null;
+};
+
+const getBranchForDepartment = (departmentId: number) => {
+  const dept = departments.find(d => d.DepartmentID === departmentId);
+  if (!dept) return null;
+  return branches.find(b => b.BranchID === dept.BranchID);
+};
+
+const getEmployeeRole = (employeeId: number) => {
+  const manager = managerDetails.find(m => m.EmployeeID === employeeId);
+  if (manager) return { roleType: 'Manager', ...manager };
+  
+  const teller = tellerDetails.find(t => t.EmployeeID === employeeId);
+  if (teller) return { roleType: 'Teller', ...teller };
+  
+  const clerk = clerkDetails.find(c => c.EmployeeID === employeeId);
+  if (clerk) return { roleType: 'Clerk', ...clerk };
+  
+  return { roleType: 'Employee' };
 };
 
 export const api = {
@@ -72,10 +54,12 @@ export const api = {
         return { success: false, error: 'Invalid password' };
       }
       
-      const customer = DEMO_CUSTOMERS.find(c => c.NationalID === nationalId);
+      const customer = customers.find(c => c.NationalID === nationalId);
       if (!customer) {
         return { success: false, error: 'Invalid National ID' };
       }
+      
+      const phones = customerPhones.filter(p => p.CustomerID === customer.CustomerID).map(p => p.Phone);
       
       const token = btoa(JSON.stringify({ id: customer.CustomerID, type: 'customer' }));
       localStorage.setItem('token', token);
@@ -91,7 +75,7 @@ export const api = {
         area: customer.Area,
         state: customer.State,
         dateOfBirth: customer.DateOfBirth,
-        phones: customer.phones,
+        phones,
       }));
       
       return { 
@@ -108,7 +92,7 @@ export const api = {
           area: customer.Area,
           state: customer.State,
           dateOfBirth: customer.DateOfBirth,
-          phones: customer.phones,
+          phones,
         }
       };
     },
@@ -120,39 +104,30 @@ export const api = {
       }
       
       const empId = parseInt(employeeId);
-      const employee = DEMO_EMPLOYEES.find(e => e.EmployeeID === empId);
+      const employee = employees.find(e => e.EmployeeID === empId);
       if (!employee) {
         return { success: false, error: 'Invalid Employee ID' };
       }
       
-      const employeeDetails = DEMO_EMPLOYEES.find(e => e.EmployeeID === empId);
-      let roleType = 'employee';
-      let roleDetails = null;
+      const role = getEmployeeRole(empId);
+      const dept = departments.find(d => d.DepartmentID === employee.DepartmentID);
+      const branch = dept ? branches.find(b => b.BranchID === dept.BranchID) : null;
       
-      if (empId === 1 || empId === 5) {
-        roleType = 'manager';
-        roleDetails = { jobTitle: employeeDetails?.jobTitle };
-      } else if (empId === 3 || empId === 4) {
-        roleType = 'teller';
-        roleDetails = { branchLocation: employeeDetails?.branchLocation, tellerID: employeeDetails?.tellerID };
-      } else {
-        roleType = 'clerk';
-        roleDetails = { clerkLevel: employeeDetails?.clerkLevel };
-      }
-      
-      const token = btoa(JSON.stringify({ id: employee.EmployeeID, type: 'employee', roleType }));
+      const token = btoa(JSON.stringify({ id: employee.EmployeeID, type: 'employee' }));
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify({
         id: employee.EmployeeID,
         type: 'employee',
-        roleType,
         name: `${employee.FirstName} ${employee.LastName}`,
         firstName: employee.FirstName,
         lastName: employee.LastName,
         gender: employee.Gender,
         salary: employee.Salary,
         departmentId: employee.DepartmentID,
-        ...roleDetails,
+        departmentName: dept?.DepartmentName,
+        branchId: branch?.BranchID,
+        branchName: branch?.BranchName,
+        ...role,
       }));
       
       return { 
@@ -160,14 +135,16 @@ export const api = {
         user: {
           id: employee.EmployeeID,
           type: 'employee',
-          roleType,
           name: `${employee.FirstName} ${employee.LastName}`,
           firstName: employee.FirstName,
           lastName: employee.LastName,
           gender: employee.Gender,
           salary: employee.Salary,
           departmentId: employee.DepartmentID,
-          ...roleDetails,
+          departmentName: dept?.DepartmentName,
+          branchId: branch?.BranchID,
+          branchName: branch?.BranchName,
+          ...role,
         }
       };
     },
@@ -177,32 +154,34 @@ export const api = {
     getProfile: async () => {
       await delay(200);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const customer = DEMO_CUSTOMERS.find(c => c.CustomerID === user.id) || DEMO_CUSTOMERS[0];
-      const phones = DEMO_CUSTOMERS.find(c => c.CustomerID === user.id)?.phones || [];
+      const customer = customers.find(c => c.CustomerID === user.id) || customers[0];
+      const phones = customerPhones.filter(p => p.CustomerID === customer?.CustomerID).map(p => p.Phone);
       return { ...customer, phones };
     },
     getAccounts: async () => {
       await delay(300);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const accounts = DEMO_ACCOUNTS.filter(a => a.CustomerID === user.id);
+      const accounts = bankAccounts.filter(a => a.CustomerID === user.id);
       return accounts.map(acc => {
-        const isSavings = DEMO_ACCOUNTS.some(s => s.AccountID === acc.AccountID && s.InterestRate !== undefined);
+        const accountDetails = getAccountDetails(acc.AccountID);
+        const branch = branches.find(b => b.BranchID === acc.BranchID);
         return {
           ...acc,
-          AccountTypeName: acc.AccountType,
+          ...accountDetails,
           balance: calculateBalance(acc.AccountID),
-          additional_info: isSavings ? `Interest Rate: ${acc.InterestRate}%` : `Overdraft Limit: $${acc.OverdraftLimit}`,
+          branchName: branch?.BranchName,
+          branchLocation: branch?.Location,
         };
       });
     },
     getTransactions: async (accountId: number) => {
       await delay(200);
-      return DEMO_TRANSACTIONS.filter(t => t.AccountID === accountId);
+      return transactions.filter(t => t.AccountID === accountId);
     },
     deposit: async (accountId: number, amount: number) => {
       await delay(300);
-      DEMO_TRANSACTIONS.push({
-        TransactionID: DEMO_TRANSACTIONS.length + 1,
+      transactions.push({
+        TransactionID: transactions.length + 1,
         Amount: amount,
         Date_Time: new Date().toISOString(),
         TransactionType: 'Deposit',
@@ -214,15 +193,16 @@ export const api = {
     withdraw: async (accountId: number, amount: number) => {
       await delay(300);
       const balance = calculateBalance(accountId);
-      const account = DEMO_ACCOUNTS.find(a => a.AccountID === accountId);
-      const maxWithdraw = balance + (account?.OverdraftLimit || 0);
+      const account = bankAccounts.find(a => a.AccountID === accountId);
+      const accountDetails = getAccountDetails(accountId);
+      const maxWithdraw = balance + (accountDetails?.type === 'Checking' ? (accountDetails as any).OverdraftLimit || 0 : 0);
       
       if (amount > maxWithdraw) {
         return { success: false, error: 'Insufficient funds' };
       }
       
-      DEMO_TRANSACTIONS.push({
-        TransactionID: DEMO_TRANSACTIONS.length + 1,
+      transactions.push({
+        TransactionID: transactions.length + 1,
         Amount: amount,
         Date_Time: new Date().toISOString(),
         TransactionType: 'Withdraw',
@@ -234,23 +214,23 @@ export const api = {
     transfer: async (fromAccountId: number, toAccountId: number, amount: number) => {
       await delay(300);
       const balance = calculateBalance(fromAccountId);
-      const account = DEMO_ACCOUNTS.find(a => a.AccountID === fromAccountId);
-      const maxWithdraw = balance + (account?.OverdraftLimit || 0);
+      const accountDetails = getAccountDetails(fromAccountId);
+      const maxWithdraw = balance + (accountDetails?.type === 'Checking' ? (accountDetails as any).OverdraftLimit || 0 : 0);
       
       if (amount > maxWithdraw) {
         return { success: false, error: 'Insufficient funds' };
       }
       
-      DEMO_TRANSACTIONS.push({
-        TransactionID: DEMO_TRANSACTIONS.length + 1,
+      transactions.push({
+        TransactionID: transactions.length + 1,
         Amount: amount,
         Date_Time: new Date().toISOString(),
         TransactionType: 'Withdraw',
         AccountID: fromAccountId,
         ATMID: 1
       });
-      DEMO_TRANSACTIONS.push({
-        TransactionID: DEMO_TRANSACTIONS.length + 1,
+      transactions.push({
+        TransactionID: transactions.length + 1,
         Amount: amount,
         Date_Time: new Date().toISOString(),
         TransactionType: 'Deposit',
@@ -262,17 +242,13 @@ export const api = {
     getLoans: async () => {
       await delay(200);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const loans = DEMO_LOANS.filter(l => l.CustomerID === user.id);
-      return loans.map(loan => ({
-        ...loan,
-        status: loan.ApprovedAmt ? 'Approved' : 'Pending'
-      }));
+      return loanApplications.filter(l => l.CustomerID === user.id);
     },
     createLoan: async (amount: number) => {
       await delay(300);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      DEMO_LOANS.push({
-        ApplicationID: DEMO_LOANS.length + 1,
+      loanApplications.push({
+        ApplicationID: loanApplications.length + 1,
         AppDate: new Date().toISOString().split('T')[0],
         CustomerID: user.id,
         ApprovedAmt: amount,
@@ -284,68 +260,123 @@ export const api = {
   admin: {
     getCustomers: async () => {
       await delay(300);
-      return DEMO_CUSTOMERS.map(c => ({
+      return customers.map(c => ({
         ...c,
-        phones: c.phones,
+        phones: customerPhones.filter(p => p.CustomerID === c.CustomerID).map(p => p.Phone),
       }));
+    },
+    getCustomerPhones: async () => {
+      await delay(200);
+      return customerPhones;
     },
     getAccounts: async () => {
       await delay(300);
-      return DEMO_ACCOUNTS.map(acc => {
-        const isSavings = acc.InterestRate !== undefined;
+      return bankAccounts.map(acc => {
+        const accountDetails = getAccountDetails(acc.AccountID);
+        const branch = branches.find(b => b.BranchID === acc.BranchID);
+        const customer = customers.find(c => c.CustomerID === acc.CustomerID);
         return {
           ...acc,
-          AccountTypeName: acc.AccountType,
+          ...accountDetails,
           balance: calculateBalance(acc.AccountID),
-          additional_info: isSavings ? `Interest Rate: ${acc.InterestRate}%` : `Overdraft Limit: $${acc.OverdraftLimit}`,
+          branchName: branch?.BranchName,
+          customerName: customer ? `${customer.FirstName} ${customer.LastName}` : null,
         };
       });
     },
+    getSavingsAccounts: async () => {
+      await delay(200);
+      return savingsAccounts;
+    },
+    getCheckingAccounts: async () => {
+      await delay(200);
+      return checkingAccounts;
+    },
     getEmployees: async () => {
       await delay(300);
-      return DEMO_EMPLOYEES.map(e => {
-        let roleType = 'employee';
-        if (e.EmployeeID === 1 || e.EmployeeID === 5) roleType = 'manager';
-        else if (e.EmployeeID === 3 || e.EmployeeID === 4) roleType = 'teller';
-        else roleType = 'clerk';
-        return { ...e, roleType };
+      return employees.map(e => {
+        const role = getEmployeeRole(e.EmployeeID);
+        const dept = departments.find(d => d.DepartmentID === e.DepartmentID);
+        return { ...e, ...role, departmentName: dept?.DepartmentName };
+      });
+    },
+    getManagerDetails: async () => {
+      await delay(200);
+      return managerDetails.map(m => {
+        const emp = employees.find(e => e.EmployeeID === m.EmployeeID);
+        return { ...m, employeeName: emp ? `${emp.FirstName} ${emp.LastName}` : null };
+      });
+    },
+    getTellerDetails: async () => {
+      await delay(200);
+      return tellerDetails.map(t => {
+        const emp = employees.find(e => e.EmployeeID === t.EmployeeID);
+        return { ...t, employeeName: emp ? `${emp.FirstName} ${emp.LastName}` : null };
+      });
+    },
+    getClerkDetails: async () => {
+      await delay(200);
+      return clerkDetails.map(c => {
+        const emp = employees.find(e => e.EmployeeID === c.EmployeeID);
+        return { ...c, employeeName: emp ? `${emp.FirstName} ${emp.LastName}` : null };
       });
     },
     getBranches: async () => {
       await delay(200);
-      return DEMO_BRANCHES;
+      return branches;
     },
     getDepartments: async () => {
       await delay(200);
-      return DEMO_DEPARTMENTS;
+      return departments.map(d => {
+        const branch = branches.find(b => b.BranchID === d.BranchID);
+        return { ...d, branchName: branch?.BranchName };
+      });
     },
     getATMs: async () => {
       await delay(200);
-      return DEMO_ATMS;
+      return atms.map(a => {
+        const branch = branches.find(b => b.BranchID === a.BranchID);
+        return { ...a, branchName: branch?.BranchName };
+      });
     },
     getTransactions: async () => {
       await delay(300);
-      return DEMO_TRANSACTIONS;
+      return transactions.map(t => {
+        const account = bankAccounts.find(a => a.AccountID === t.AccountID);
+        const atm = atms.find(a => a.ATMID === t.ATMID);
+        return { 
+          ...t, 
+          accountNumber: account?.AccountNumber,
+          atmLocation: atm?.Location 
+        };
+      });
     },
     getLoans: async () => {
       await delay(300);
-      return DEMO_LOANS.map(loan => ({
-        ...loan,
-        status: loan.ApprovedAmt ? 'Approved' : 'Pending'
-      }));
+      return loanApplications.map(l => {
+        const customer = customers.find(c => c.CustomerID === l.CustomerID);
+        return { 
+          ...l, 
+          customerName: customer ? `${customer.FirstName} ${customer.LastName}` : null 
+        };
+      });
     },
     createAccount: async (customerId: number, accountType: string, branchId: number) => {
       await delay(300);
-      const newId = DEMO_ACCOUNTS.length + 1;
-      DEMO_ACCOUNTS.push({
+      const newId = bankAccounts.length + 1;
+      bankAccounts.push({
         AccountID: newId,
         AccountNumber: `ACC-${1000 + newId}`,
         OpenDate: new Date().toISOString().split('T')[0],
         AccountType: accountType,
         CustomerID: customerId,
         BranchID: branchId,
-        ...(accountType === 'Savings' ? { InterestRate: 5.0 } : { OverdraftLimit: 1000 }),
       });
+      if (accountType === 'Savings') {
+        savingsAccounts.push({ AccountID: newId, InterestRate: 5.0 });
+      } else {
+        checkingAccounts.push({ AccountID: newId, OverdraftLimit: 1000 });
+      }
       return { success: true, accountId: newId };
     },
   },
