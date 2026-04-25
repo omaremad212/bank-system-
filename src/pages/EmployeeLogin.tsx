@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import api from '../services/api';
 
 const EmployeeLogin = () => {
   const navigate = useNavigate();
@@ -18,14 +18,14 @@ const EmployeeLogin = () => {
 
     try {
       const result = await api.login.employee(employeeId, password);
-      if (result.success && result.user) {
+      if (result.token && result.user) {
         login(result.user);
         navigate('/employee');
       } else {
         setError(result.error || 'Invalid credentials');
       }
-    } catch {
-      setError('An error occurred. Please try again.');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
