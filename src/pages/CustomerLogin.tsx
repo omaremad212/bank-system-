@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { customers } from '../data/customers';
 
 const CustomerLogin = () => {
   const navigate = useNavigate();
@@ -43,7 +42,7 @@ const CustomerLogin = () => {
           </div>
           
           <h2>Welcome to Your Digital Banking Portal</h2>
-          <p>Manage your finances with our secure, modern banking platform designed for the way you live.</p>
+          <p>Manage your finances with our secure, modern banking platform.</p>
           
           <div className="login-features">
             <div className="login-feature">
@@ -123,25 +122,8 @@ const CustomerLogin = () => {
             </button>
           </form>
 
-          <div className="login-demo-box">
-            <h4>&#x1F4A1; Demo Credentials</h4>
-            <p>Use any of these National IDs with password: <strong>0000</strong></p>
-            <div className="demo-ids">
-              {customers.map((c) => (
-                <button 
-                  key={c.CustomerID} 
-                  type="button"
-                  className="demo-id-btn"
-                  onClick={() => {
-                    setNationalId(c.NationalID);
-                    setPassword('0000');
-                  }}
-                >
-                  <span className="demo-id-name">{c.FirstName} {c.LastName}</span>
-                  <span className="demo-id-value">{c.NationalID}</span>
-                </button>
-              ))}
-            </div>
+          <div className="login-hint">
+            Demo password: <strong>0000</strong>
           </div>
 
           <div className="login-footer">

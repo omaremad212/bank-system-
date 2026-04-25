@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { employees } from '../data/employees';
 
 const EmployeeLogin = () => {
   const navigate = useNavigate();
@@ -43,7 +42,7 @@ const EmployeeLogin = () => {
           </div>
           
           <h2>Employee Portal</h2>
-          <p>Access the administrative dashboard to manage accounts, customers, and operations.</p>
+          <p>Access the administrative dashboard to manage accounts and operations.</p>
           
           <div className="login-features">
             <div className="login-feature">
@@ -123,25 +122,8 @@ const EmployeeLogin = () => {
             </button>
           </form>
 
-          <div className="login-demo-box">
-            <h4>&#x1F4A1; Demo Credentials</h4>
-            <p>Use any of these Employee IDs with password: <strong>0000</strong></p>
-            <div className="demo-ids">
-              {employees.map((e) => (
-                <button 
-                  key={e.EmployeeID} 
-                  type="button"
-                  className="demo-id-btn"
-                  onClick={() => {
-                    setEmployeeId(String(e.EmployeeID));
-                    setPassword('0000');
-                  }}
-                >
-                  <span className="demo-id-name">{e.FirstName} {e.LastName}</span>
-                  <span className="demo-id-value">ID: {e.EmployeeID}</span>
-                </button>
-              ))}
-            </div>
+          <div className="login-hint">
+            Demo password: <strong>0000</strong>
           </div>
 
           <div className="login-footer">

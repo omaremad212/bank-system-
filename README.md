@@ -198,12 +198,16 @@ PORT=3000
 ## Demo Credentials
 
 ### Customer Login
-- **National ID**: `29901011234567`
-- **Password**: `0000`
+- **National ID**: `29901011234567` (Mohamed Youssef)
+- **National ID**: `30005152345678` (Nour Tarek)
+- **National ID**: `29808203456789` (Bassem Fathy)
+- **Password**: `0000` (for all customers)
 
 ### Employee Login
-- **Employee ID**: `1`
-- **Password**: `0000`
+- **Employee ID**: `1` (Mohamed Anwar - Branch Manager) - Full admin access
+- **Employee ID**: `2` (Sara Ali - Clerk)
+- **Employee ID**: `3` (Mahmoud Adel - Teller)
+- **Password**: `0000` (for all employees)
 
 ---
 
