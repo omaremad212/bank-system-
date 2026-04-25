@@ -1,0 +1,87 @@
+import { useState, useEffect } from 'react';
+import { api } from '../../services/api';
+import { Employee, Department } from '../../types';
+
+const EmployeeEmployees = () => {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [empData, deptData] = await Promise.all([
+          api.employees.getAll(),
+          api.departments.getAll(),
+        ]);
+        setEmployees(empData);
+        setDepartments(deptData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const getDepartmentName = (departmentId: number) => {
+    return departments.find((d) => d.DepartmentID === departmentId)?.DepartmentName || 'N/A';
+  };
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="page-header">
+        <div>
+          <h1>Employees</h1>
+          <p>Manage employee records</p>
+        </div>
+      </div>
+
+      <div className="card">
+        {employees.length === 0 ? (
+          <div className="empty-state">
+            <p>No employees found</p>
+          </div>
+        ) : (
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Gender</th>
+                  <th>Department</th>
+                  <th>Salary</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((employee) => (
+                  <tr key={employee.EmployeeID}>
+                    <td>{employee.EmployeeID}</td>
+                    <td>
+                      {employee.FirstName} {employee.LastName}
+                    </td>
+                    <td>{employee.Gender}</td>
+                    <td>{getDepartmentName(employee.DepartmentID)}</td>
+                    <td>${employee.Salary?.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default EmployeeEmployees;
