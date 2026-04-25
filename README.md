@@ -74,11 +74,11 @@ Rules:
 
 ## 🛠 Tech Stack
 
-- Frontend: (Next.js / React)  
-- Backend: (Node.js / API Routes)  
-- Database: (Your DB - MySQL / PostgreSQL / etc)  
-- Deployment: Vercel  
-- Version Control: GitHub  
+- Frontend: React + Vite + TypeScript
+- Backend: Node.js / API Routes
+- Database: MySQL / MariaDB
+- Deployment: Vercel
+- Version Control: GitHub
 
 ---
 
@@ -88,3 +88,37 @@ Rules:
 ```bash
 git clone https://github.com/omaremad212/bank-system-.git
 cd bank-system-
+```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Run development server
+```bash
+npm run dev
+```
+
+### 4. Build for production
+```bash
+npm run build
+```
+
+### 5. Deploy to Vercel
+```bash
+# Push to GitHub, then connect to Vercel
+npx vercel --prod
+```
+
+---
+
+## 🔑 Login Credentials (Mock)
+
+### Customer Login
+- NationalID: 29901011234567
+- Password: password
+
+### Employee Login
+- Employee ID: 1
+- Password: password
