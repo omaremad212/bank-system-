@@ -5,12 +5,11 @@ import { Customer } from '../../types';
 const EmployeeCustomers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const data = await api.customers.getAll();
+        const data = await api.admin.getCustomers();
         setCustomers(data);
       } catch (error) {
         console.error('Error fetching customers:', error);

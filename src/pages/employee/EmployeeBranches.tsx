@@ -9,7 +9,7 @@ const EmployeeBranches = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const data = await api.branches.getAll();
+        const data = await api.admin.getBranches();
         setBranches(data);
       } catch (error) {
         console.error('Error fetching branches:', error);

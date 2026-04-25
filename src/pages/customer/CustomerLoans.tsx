@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { LoanApplication } from '../../types';
 
 const CustomerLoans = () => {
-  const { user } = useAuth();
   const [loans, setLoans] = useState<LoanApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -15,8 +13,7 @@ const CustomerLoans = () => {
   useEffect(() => {
     const fetchLoans = async () => {
       try {
-        const customerId = (user as any).CustomerID || 1;
-        const data = await api.loans.getByCustomerId(customerId);
+        const data = await api.customer.getLoans();
         setLoans(data);
       } catch (error) {
         console.error('Error fetching loans:', error);
@@ -25,26 +22,22 @@ const CustomerLoans = () => {
       }
     };
     fetchLoans();
-  }, [user]);
+  }, []);
 
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount) return;
 
     try {
-      await api.loans.create({
-        CustomerID: (user as any).CustomerID || 1,
-        ApprovedAmt: parseFloat(amount),
-      });
+      await api.customer.createLoan(parseFloat(amount));
 
       setSuccess(true);
       setMessage('Loan application submitted successfully!');
 
-      const customerId = (user as any).CustomerID || 1;
-      const updatedLoans = await api.loans.getByCustomerId(customerId);
+      const updatedLoans = await api.customer.getLoans();
       setLoans(updatedLoans);
-    } catch (error) {
-      setMessage('Failed to apply for loan. Please try again.');
+    } catch (error: any) {
+      setMessage(error.response?.data?.error || 'Failed to apply for loan. Please try again.');
     }
   };
 
@@ -113,7 +106,7 @@ const CustomerLoans = () => {
                   <tr key={loan.ApplicationID}>
                     <td>#{loan.ApplicationID}</td>
                     <td>{loan.AppDate}</td>
-                    <td>${loan.ApprovedAmt?.toLocaleString() || 'N/A'}</td>
+                    <td>${loan.ApprovedAmt?.toLocaleString() || 'Pending'}</td>
                     <td>{loan.StartDate || 'N/A'}</td>
                     <td>{loan.EndDate || 'N/A'}</td>
                     <td>

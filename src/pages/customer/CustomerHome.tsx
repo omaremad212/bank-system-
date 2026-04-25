@@ -12,10 +12,9 @@ const CustomerHome = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const customerId = (user as any).CustomerID || 1;
         const [accData, loanData] = await Promise.all([
-          api.accounts.getByCustomerId(customerId),
-          api.loans.getByCustomerId(customerId),
+          api.customer.getAccounts(),
+          api.customer.getLoans(),
         ]);
         setAccounts(accData);
         setLoans(loanData);
@@ -74,8 +73,8 @@ const CustomerHome = () => {
               <div key={account.AccountID} className="account-card">
                 <div className="account-card-header">
                   <span className="account-number">{account.AccountNumber}</span>
-                  <span className={`account-type ${account.AccountType.toLowerCase()}`}>
-                    {account.AccountType}
+                  <span className={`account-type ${account.AccountTypeName?.toLowerCase() || account.AccountType?.toLowerCase()}`}>
+                    {account.AccountTypeName || account.AccountType}
                   </span>
                 </div>
                 <div className="account-balance">
@@ -105,12 +104,12 @@ const CustomerHome = () => {
                   </span>
                 </div>
                 <div className="account-balance">
-                  ${loan.ApprovedAmt?.toLocaleString()}
+                  ${loan.ApprovedAmt?.toLocaleString() || 'Pending'}
                 </div>
                 <div className="account-balance-label">
                   {loan.StartDate && loan.EndDate
                     ? `${loan.StartDate} - ${loan.EndDate}`
-                    : 'Pending'}
+                    : 'Pending approval'}
                 </div>
               </div>
             ))

@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { Transaction, BankAccount } from '../../types';
 
 const CustomerTransactions = () => {
-  const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,16 +11,19 @@ const CustomerTransactions = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const customerId = (user as any).CustomerID || 1;
-        const [accData, allTransactions] = await Promise.all([
-          api.accounts.getByCustomerId(customerId),
-          api.transactions.getAll(),
+        const [accData] = await Promise.all([
+          api.customer.getAccounts(),
         ]);
         setAccounts(accData);
         
-        const accountIds = accData.map((a: BankAccount) => a.AccountID);
-        const filteredTransactions = allTransactions.filter((t: Transaction) => accountIds.includes(t.AccountID));
-        setTransactions(filteredTransactions);
+        let allTransactions: Transaction[] = [];
+        for (const account of accData) {
+          const txs = await api.customer.getTransactions(account.AccountID);
+          allTransactions = [...allTransactions, ...txs];
+        }
+        setTransactions(allTransactions.sort((a, b) => 
+          new Date(b.Date_Time).getTime() - new Date(a.Date_Time).getTime()
+        ));
       } catch (error) {
         console.error('Error fetching transactions:', error);
       } finally {
@@ -30,7 +31,7 @@ const CustomerTransactions = () => {
       }
     };
     fetchData();
-  }, [user]);
+  }, []);
 
   const filteredTransactions = selectedAccount === 0
     ? transactions
@@ -74,7 +75,7 @@ const CustomerTransactions = () => {
             <option value={0}>All Accounts</option>
             {accounts.map((account) => (
               <option key={account.AccountID} value={account.AccountID}>
-                {account.AccountNumber} ({account.AccountType})
+                {account.AccountNumber} ({account.AccountTypeName || account.AccountType})
               </option>
             ))}
           </select>
@@ -109,8 +110,8 @@ const CustomerTransactions = () => {
                           {transaction.TransactionType}
                         </span>
                       </td>
-                      <td className={transaction.TransactionType === 'Withdraw' ? 'text-danger' : ''}>
-                        {transaction.TransactionType === 'Withdraw' ? '-' : '+'}
+                      <td className={transaction.TransactionType === 'Withdraw' || transaction.TransactionType === 'Transfer' ? 'text-danger' : ''}>
+                        {transaction.TransactionType === 'Withdraw' || transaction.TransactionType === 'Transfer' ? '-' : '+'}
                         ${transaction.Amount.toLocaleString()}
                       </td>
                     </tr>

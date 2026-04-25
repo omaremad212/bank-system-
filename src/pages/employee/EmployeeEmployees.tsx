@@ -11,8 +11,8 @@ const EmployeeEmployees = () => {
     const fetchData = async () => {
       try {
         const [empData, deptData] = await Promise.all([
-          api.employees.getAll(),
-          api.departments.getAll(),
+          api.admin.getEmployees(),
+          api.admin.getDepartments(),
         ]);
         setEmployees(empData);
         setDepartments(deptData);

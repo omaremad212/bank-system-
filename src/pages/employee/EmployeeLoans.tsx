@@ -9,7 +9,7 @@ const EmployeeLoans = () => {
   useEffect(() => {
     const fetchLoans = async () => {
       try {
-        const data = await api.loans.getAll();
+        const data = await api.admin.getLoans();
         setLoans(data);
       } catch (error) {
         console.error('Error fetching loans:', error);

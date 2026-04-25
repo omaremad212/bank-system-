@@ -13,10 +13,10 @@ const EmployeeHome = () => {
     const fetchData = async () => {
       try {
         const [c, a, t, l] = await Promise.all([
-          api.customers.getAll(),
-          api.accounts.getAll(),
-          api.transactions.getAll(),
-          api.loans.getAll(),
+          api.admin.getCustomers(),
+          api.admin.getAccounts(),
+          api.admin.getTransactions(),
+          api.admin.getLoans(),
         ]);
         setCustomers(c);
         setAccounts(a);
@@ -99,7 +99,7 @@ const EmployeeHome = () => {
                 <div className="text-sm text-muted">Customer: {loan.CustomerID}</div>
               </div>
               <div className="text-right">
-                <div className="font-bold">${loan.ApprovedAmt?.toLocaleString()}</div>
+                <div className="font-bold">${loan.ApprovedAmt?.toLocaleString() || 'Pending'}</div>
                 <span className={`badge badge-${loan.status === 'Approved' ? 'success' : 'warning'}`}>
                   {loan.status}
                 </span>

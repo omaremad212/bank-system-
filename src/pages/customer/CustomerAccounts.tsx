@@ -1,25 +1,22 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { BankAccount } from '../../types';
 
 const CustomerAccounts = () => {
-  const { user } = useAuth();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'deposit' | 'withdraw' | 'transfer'>('deposit');
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
   const [amount, setAmount] = useState('');
-  const [recipientAccount, setRecipientAccount] = useState('');
+  const [recipientAccountId, setRecipientAccountId] = useState('');
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const customerId = (user as any).CustomerID || 1;
-        const data = await api.accounts.getByCustomerId(customerId);
+        const data = await api.customer.getAccounts();
         setAccounts(data);
       } catch (error) {
         console.error('Error fetching accounts:', error);
@@ -28,13 +25,13 @@ const CustomerAccounts = () => {
       }
     };
     fetchAccounts();
-  }, [user]);
+  }, []);
 
   const handleAction = (account: BankAccount, type: 'deposit' | 'withdraw' | 'transfer') => {
     setSelectedAccount(account);
     setModalType(type);
     setAmount('');
-    setRecipientAccount('');
+    setRecipientAccountId('');
     setMessage('');
     setSuccess(false);
     setShowModal(true);
@@ -45,21 +42,25 @@ const CustomerAccounts = () => {
     if (!selectedAccount || !amount) return;
 
     try {
-      const transactionType = modalType === 'transfer' ? 'Transfer' : modalType.charAt(0).toUpperCase() + modalType.slice(1) as 'Deposit' | 'Withdraw' | 'Transfer';
-      await api.transactions.create({
-        Amount: parseFloat(amount),
-        TransactionType: transactionType as 'Deposit' | 'Withdraw' | 'Transfer',
-        AccountID: selectedAccount.AccountID,
-      });
+      if (modalType === 'deposit') {
+        await api.customer.deposit(selectedAccount.AccountID, parseFloat(amount));
+      } else if (modalType === 'withdraw') {
+        await api.customer.withdraw(selectedAccount.AccountID, parseFloat(amount));
+      } else if (modalType === 'transfer') {
+        await api.customer.transfer(
+          selectedAccount.AccountID,
+          parseInt(recipientAccountId),
+          parseFloat(amount)
+        );
+      }
 
       setSuccess(true);
       setMessage(`${modalType.charAt(0).toUpperCase() + modalType.slice(1)} successful!`);
 
-      const customerId = (user as any).CustomerID || 1;
-      const updatedAccounts = await api.accounts.getByCustomerId(customerId);
+      const updatedAccounts = await api.customer.getAccounts();
       setAccounts(updatedAccounts);
-    } catch (error) {
-      setMessage('Transaction failed. Please try again.');
+    } catch (error: any) {
+      setMessage(error.response?.data?.error || 'Transaction failed. Please try again.');
     }
   };
 
@@ -88,8 +89,8 @@ const CustomerAccounts = () => {
                 <h3 className="card-title">{account.AccountNumber}</h3>
                 <p className="text-muted text-sm">Opened on {account.OpenDate}</p>
               </div>
-              <span className={`account-type ${account.AccountType.toLowerCase()}`}>
-                {account.AccountType}
+              <span className={`account-type ${account.AccountTypeName?.toLowerCase() || account.AccountType?.toLowerCase()}`}>
+                {account.AccountTypeName || account.AccountType}
               </span>
             </div>
 
@@ -119,14 +120,12 @@ const CustomerAccounts = () => {
               </button>
             </div>
 
-            {account.interestRate && (
+            {account.additional_info && (
               <div className="mt-2 text-sm text-muted">
-                Interest Rate: {account.interestRate}%
-              </div>
-            )}
-            {account.overdraftLimit && (
-              <div className="mt-2 text-sm text-muted">
-                Overdraft Limit: ${account.overdraftLimit}
+                {account.AccountTypeName === 'Savings' 
+                  ? `Interest Rate: ${account.additional_info}%`
+                  : `Overdraft Limit: $${account.additional_info}`
+                }
               </div>
             )}
           </div>
@@ -166,12 +165,12 @@ const CustomerAccounts = () => {
                 </div>
                 {modalType === 'transfer' && (
                   <div className="form-group mb-2">
-                    <label>Recipient Account Number</label>
+                    <label>Recipient Account ID</label>
                     <input
-                      type="text"
-                      value={recipientAccount}
-                      onChange={(e) => setRecipientAccount(e.target.value)}
-                      placeholder="Enter account number"
+                      type="number"
+                      value={recipientAccountId}
+                      onChange={(e) => setRecipientAccountId(e.target.value)}
+                      placeholder="Enter recipient account ID"
                       required
                     />
                   </div>

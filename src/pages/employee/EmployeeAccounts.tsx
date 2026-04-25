@@ -8,17 +8,17 @@ const EmployeeAccounts = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    CustomerID: 0,
-    AccountType: 'Savings',
-    BranchID: 1,
+    customerId: 0,
+    accountType: 'Savings',
+    branchId: 1,
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [accData, custData] = await Promise.all([
-          api.accounts.getAll(),
-          api.customers.getAll(),
+          api.admin.getAccounts(),
+          api.admin.getCustomers(),
         ]);
         setAccounts(accData);
         setCustomers(custData);
@@ -34,15 +34,11 @@ const EmployeeAccounts = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.accounts.create({
-        CustomerID: formData.CustomerID,
-        AccountType: formData.AccountType as 'Savings' | 'Checking',
-        BranchID: formData.BranchID,
-      });
-      const updatedAccounts = await api.accounts.getAll();
+      await api.admin.createAccount(formData.customerId, formData.accountType, formData.branchId);
+      const updatedAccounts = await api.admin.getAccounts();
       setAccounts(updatedAccounts);
       setShowModal(false);
-      setFormData({ CustomerID: 0, AccountType: 'Savings', BranchID: 1 });
+      setFormData({ customerId: 0, accountType: 'Savings', branchId: 1 });
     } catch (error) {
       console.error('Error creating account:', error);
     }
@@ -93,8 +89,8 @@ const EmployeeAccounts = () => {
                     <td>{account.AccountID}</td>
                     <td>{account.AccountNumber}</td>
                     <td>
-                      <span className={`badge badge-${account.AccountType === 'Savings' ? 'primary' : 'success'}`}>
-                        {account.AccountType}
+                      <span className={`badge badge-${account.AccountTypeName === 'Savings' || account.AccountType === 'Savings' ? 'primary' : 'success'}`}>
+                        {account.AccountTypeName || account.AccountType}
                       </span>
                     </td>
                     <td>{account.CustomerID}</td>
@@ -123,8 +119,8 @@ const EmployeeAccounts = () => {
                 <div className="form-group mb-2">
                   <label>Customer</label>
                   <select
-                    value={formData.CustomerID}
-                    onChange={(e) => setFormData({ ...formData, CustomerID: Number(e.target.value) })}
+                    value={formData.customerId}
+                    onChange={(e) => setFormData({ ...formData, customerId: Number(e.target.value) })}
                     required
                   >
                     <option value={0}>Select Customer</option>
@@ -138,8 +134,8 @@ const EmployeeAccounts = () => {
                 <div className="form-group mb-2">
                   <label>Account Type</label>
                   <select
-                    value={formData.AccountType}
-                    onChange={(e) => setFormData({ ...formData, AccountType: e.target.value })}
+                    value={formData.accountType}
+                    onChange={(e) => setFormData({ ...formData, accountType: e.target.value })}
                   >
                     <option value="Savings">Savings</option>
                     <option value="Checking">Checking</option>
@@ -149,8 +145,8 @@ const EmployeeAccounts = () => {
                   <label>Branch ID</label>
                   <input
                     type="number"
-                    value={formData.BranchID}
-                    onChange={(e) => setFormData({ ...formData, BranchID: Number(e.target.value) })}
+                    value={formData.branchId}
+                    onChange={(e) => setFormData({ ...formData, branchId: Number(e.target.value) })}
                     required
                   />
                 </div>

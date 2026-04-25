@@ -9,7 +9,7 @@ const EmployeeATMs = () => {
   useEffect(() => {
     const fetchATMs = async () => {
       try {
-        const data = await api.ATMs.getAll();
+        const data = await api.admin.getATMs();
         setAtms(data);
       } catch (error) {
         console.error('Error fetching ATMs:', error);

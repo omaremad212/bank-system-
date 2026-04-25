@@ -9,7 +9,7 @@ const EmployeeTransactions = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const data = await api.transactions.getAll();
+        const data = await api.admin.getTransactions();
         setTransactions(data);
       } catch (error) {
         console.error('Error fetching transactions:', error);

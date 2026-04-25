@@ -6,7 +6,7 @@ import { api } from '../services/api';
 const EmployeeLogin = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,7 +17,7 @@ const EmployeeLogin = () => {
     setLoading(true);
 
     try {
-      const result = await api.login.employee(email, password);
+      const result = await api.login.employee(employeeId, password);
       if (result.success && result.user) {
         login(result.user);
         navigate('/employee');
@@ -43,12 +43,12 @@ const EmployeeLogin = () => {
         
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Employee ID or Email</label>
+            <label>Employee ID</label>
             <input
               type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your employee ID or email"
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
+              placeholder="Enter your employee ID"
               required
             />
           </div>
