@@ -18,14 +18,15 @@ const EmployeeLogin = () => {
 
     try {
       const result = await api.login.employee(employeeId, password);
-      if (result.token && result.user) {
+      
+      if (result && result.token && result.user) {
         login(result.user);
         navigate('/employee');
       } else {
-        setError(result.error || 'Invalid credentials');
+        setError(result?.error || 'Invalid credentials');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'An error occurred. Please try again.');
+      setError(err?.message || err?.error || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

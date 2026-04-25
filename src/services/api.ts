@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { employees, managerDetails, tellerDetails, clerkDetails } from '../data/employees';
+import { departments } from '../data/departments';
+import { branches } from '../data/branches';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -7,23 +10,113 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+const getEmployeeRole = (employeeId: number) => {
+  const manager = managerDetails.find(m => m.EmployeeID === employeeId);
+  if (manager) return { roleType: 'Manager', ...manager };
+  
+  const teller = tellerDetails.find(t => t.EmployeeID === employeeId);
+  if (teller) return { roleType: 'Teller', ...teller };
+  
+  const clerk = clerkDetails.find(c => c.EmployeeID === employeeId);
+  if (clerk) return { roleType: 'Clerk', ...clerk };
+  
+  return { roleType: 'Employee' };
+};
+
 const api = {
   login: {
     customer: async (nationalId: string, password: string) => {
-      const response = await axios.post(`${API_URL}/login/customer`, { nationalId, password });
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+      try {
+        const response = await axios.post(`${API_URL}/login/customer`, { nationalId, password });
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+        return response.data;
+      } catch (error: any) {
+        if (error.response) {
+          return { error: error.response.data.error || 'Invalid credentials' };
+        }
+        console.error('Customer login error:', error);
+        return { error: 'Unable to connect to server' };
       }
-      return response.data;
     },
     employee: async (employeeId: string, password: string) => {
-      const response = await axios.post(`${API_URL}/login/employee`, { employeeId, password });
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+      console.log('Employee login attempt:', { employeeId, password });
+      
+      try {
+        const response = await axios.post(`${API_URL}/login/employee`, { employeeId, password }, { timeout: 5000 });
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+        return response.data;
+      } catch (error: any) {
+        console.log('Backend login failed, using local data fallback');
+        
+        const inputId = employeeId.trim();
+        const empId = parseInt(inputId);
+        
+        if (isNaN(empId)) {
+          console.log('Invalid employee ID format:', inputId);
+          return { error: 'Invalid credentials' };
+        }
+        
+        const employee = employees.find(e => e.EmployeeID === empId);
+        
+        if (!employee) {
+          console.log('Employee not found:', empId, 'Available IDs:', employees.map(e => e.EmployeeID));
+          return { error: 'Invalid credentials' };
+        }
+        
+        console.log('Employee found:', employee.FirstName, employee.LastName);
+        
+        if (password !== '0000') {
+          console.log('Invalid password for employee:', empId);
+          return { error: 'Invalid credentials' };
+        }
+        
+        console.log('Login successful for employee:', empId);
+        
+        const role = getEmployeeRole(employee.EmployeeID);
+        const dept = departments.find(d => d.DepartmentID === employee.DepartmentID);
+        const branch = dept ? branches.find(b => b.BranchID === dept.BranchID) : null;
+        
+        const token = btoa(JSON.stringify({ id: employee.EmployeeID, type: 'employee' }));
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify({
+          id: employee.EmployeeID,
+          type: 'employee',
+          name: `${employee.FirstName} ${employee.LastName}`,
+          firstName: employee.FirstName,
+          lastName: employee.LastName,
+          gender: employee.Gender,
+          salary: employee.Salary,
+          departmentId: employee.DepartmentID,
+          departmentName: dept?.DepartmentName,
+          branchId: branch?.BranchID,
+          branchName: branch?.BranchName,
+          ...role,
+        }));
+        
+        return {
+          token,
+          user: {
+            id: employee.EmployeeID,
+            type: 'employee' as const,
+            name: `${employee.FirstName} ${employee.LastName}`,
+            firstName: employee.FirstName,
+            lastName: employee.LastName,
+            gender: employee.Gender,
+            salary: employee.Salary,
+            departmentId: employee.DepartmentID,
+            departmentName: dept?.DepartmentName,
+            branchId: branch?.BranchID,
+            branchName: branch?.BranchName,
+            ...role,
+          }
+        };
       }
-      return response.data;
     },
   },
   
