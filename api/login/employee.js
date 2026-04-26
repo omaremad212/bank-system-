@@ -9,17 +9,18 @@ const pool = new Pool({
 
 const getEmployeeRole = async (employeeId) => {
   try {
-    const manager = await pool.query('SELECT * FROM manager_details WHERE employeeid = $1', [employeeId]);
+    const manager = await pool.query('SELECT * FROM manager_details WHERE "EmployeeID" = $1', [employeeId]);
     if (manager.rows.length > 0) return { roleType: 'Manager', ...manager.rows[0] };
     
-    const teller = await pool.query('SELECT * FROM teller_details WHERE employeeid = $1', [employeeId]);
+    const teller = await pool.query('SELECT * FROM teller_details WHERE "EmployeeID" = $1', [employeeId]);
     if (teller.rows.length > 0) return { roleType: 'Teller', ...teller.rows[0] };
     
-    const clerk = await pool.query('SELECT * FROM clerk_details WHERE employeeid = $1', [employeeId]);
+    const clerk = await pool.query('SELECT * FROM clerk_details WHERE "EmployeeID" = $1', [employeeId]);
     if (clerk.rows.length > 0) return { roleType: 'Clerk', ...clerk.rows[0] };
     
     return { roleType: 'Employee' };
   } catch (e) {
+    console.log('getEmployeeRole error:', e);
     return { roleType: 'Employee' };
   }
 };
@@ -37,7 +38,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
 
     const result = await pool.query(
-      'SELECT * FROM employee WHERE employeeid = $1',
+      'SELECT * FROM employee WHERE "EmployeeID" = $1',
       [employeeId]
     );
     
@@ -48,9 +49,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const employee = result.rows[0];
     
     let passwordValid = false;
-    if (employee.password) {
+    if (employee.Password) {
       const bcrypt = await import('bcryptjs');
-      passwordValid = await bcrypt.compare(password, employee.password);
+      passwordValid = await bcrypt.compare(password, employee.Password);
     } else {
       passwordValid = password === '0000';
     }
@@ -60,22 +61,22 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
     
     const departmentsResult = await pool.query(
-      'SELECT * FROM department WHERE departmentid = $1',
-      [employee.departmentid]
+      'SELECT * FROM department WHERE "DepartmentID" = $1',
+      [employee.DepartmentID]
     );
     const department = departmentsResult.rows[0];
     
     const branchesResult = department ? await pool.query(
-      'SELECT * FROM branch WHERE branchid = $1',
-      [department.branchid]
+      'SELECT * FROM branch WHERE "BranchID" = $1',
+      [department.BranchID]
     ) : { rows: [] };
     const branch = branchesResult.rows[0];
     
-    const role = await getEmployeeRole(employee.employeeid);
+    const role = await getEmployeeRole(employee.EmployeeID);
     
     const jwt = await import('jsonwebtoken');
     const token = jwt.sign(
-      { id: employee.employeeid, type: 'employee' },
+      { id: employee.EmployeeID, type: 'employee' },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       { expiresIn: '24h' }
     );
@@ -83,18 +84,18 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return response.status(200).json({
       token,
       user: {
-        id: employee.employeeid,
+        id: employee.EmployeeID,
         type: 'employee',
-        name: `${employee.firstname} ${employee.lastname}`,
-        firstName: employee.firstname,
-        lastName: employee.lastname,
-        gender: employee.gender,
-        salary: employee.salary,
-        email: employee.email,
-        departmentId: employee.departmentid,
-        departmentName: department?.departmentname,
-        branchId: branch?.branchid,
-        branchName: branch?.branchname,
+        name: `${employee.FirstName} ${employee.LastName}`,
+        firstName: employee.FirstName,
+        lastName: employee.LastName,
+        gender: employee.Gender,
+        salary: employee.Salary,
+        email: employee.Email,
+        departmentId: employee.DepartmentID,
+        departmentName: department?.DepartmentName,
+        branchId: branch?.BranchID,
+        branchName: branch?.BranchName,
         ...role,
       }
     });

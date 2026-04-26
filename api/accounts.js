@@ -14,15 +14,23 @@ const authenticateToken = async (req) => {
   try {
     const jwt = await import('jsonwebtoken');
     return jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
-  } catch (e) { return null; }
+  } catch (e) {
+    console.log('Auth error:', e);
+    return null;
+  }
 };
 
 const calculateBalance = async (accountId) => {
-  const result = await pool.query(
-    'SELECT COALESCE(SUM(CASE WHEN transactiontype = $1 THEN amount ELSE -amount END), 0) as balance FROM transaction WHERE accountid = $2',
-    ['Deposit', accountId]
-  );
-  return parseFloat(result.rows[0]?.balance || 0);
+  try {
+    const result = await pool.query(
+      'SELECT COALESCE(SUM(CASE WHEN "TransactionType" = $1 THEN "Amount" ELSE -"Amount" END), 0) as balance FROM transaction WHERE "AccountID" = $2',
+      ['Deposit', accountId]
+    );
+    return parseFloat(result.rows[0]?.balance || 0);
+  } catch (e) {
+    console.log('calculateBalance error:', e);
+    return 0;
+  }
 };
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
@@ -33,19 +41,19 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
   try {
     const result = await pool.query(
-      `SELECT ba.*, CASE WHEN sa.accountid IS NOT NULL THEN 'Savings' ELSE 'Checking' END as accounttypename
-       FROM bank_account ba LEFT JOIN savings_account sa ON ba.accountid = sa.accountid`
+      `SELECT ba.*, CASE WHEN sa."AccountID" IS NOT NULL THEN 'Savings' ELSE 'Checking' END as accounttypename
+       FROM bank_account ba LEFT JOIN savings_account sa ON ba."AccountID" = sa."AccountID"`
     );
 
     const accountsWithBalance = await Promise.all(result.rows.map(async (account) => {
-      const balance = await calculateBalance(account.accountid);
-      const customerResult = await pool.query('SELECT * FROM customer WHERE customerid = $1', [account.customerid]);
-      const branchResult = await pool.query('SELECT * FROM branch WHERE branchid = $1', [account.branchid]);
+      const balance = await calculateBalance(account.AccountID);
+      const customerResult = await pool.query('SELECT * FROM customer WHERE "CustomerID" = $1', [account.CustomerID]);
+      const branchResult = await pool.query('SELECT * FROM branch WHERE "BranchID" = $1', [account.BranchID]);
       return {
         ...account,
         balance,
-        customerName: customerResult.rows[0] ? `${customerResult.rows[0].firstname} ${customerResult.rows[0].lastname}` : null,
-        branchName: branchResult.rows[0]?.branchname,
+        customerName: customerResult.rows[0] ? `${customerResult.rows[0].FirstName} ${customerResult.rows[0].LastName}` : null,
+        branchName: branchResult.rows[0]?.BranchName,
       };
     }));
 

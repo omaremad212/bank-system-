@@ -16,6 +16,7 @@ const authenticateToken = async (req) => {
     const jwt = await import('jsonwebtoken');
     return jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
   } catch (e) {
+    console.log('Auth error:', e);
     return null;
   }
 };
@@ -32,10 +33,10 @@ export default async function handler(request: VercelRequest, response: VercelRe
     
     const customersWithPhones = await Promise.all(result.rows.map(async (customer) => {
       const phonesResult = await pool.query(
-        'SELECT phone FROM customer_phone WHERE customerid = $1',
-        [customer.customerid]
+        'SELECT "Phone" FROM customer_phone WHERE "CustomerID" = $1',
+        [customer.CustomerID]
       );
-      return { ...customer, phones: phonesResult.rows.map(p => p.phone) };
+      return { ...customer, phones: phonesResult.rows.map(p => p.Phone) };
     }));
     
     return response.status(200).json(customersWithPhones);

@@ -20,7 +20,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
 
     const result = await pool.query(
-      'SELECT * FROM customer WHERE nationalid = $1',
+      'SELECT * FROM customer WHERE "NationalID" = $1',
       [nationalId]
     );
     
@@ -31,9 +31,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const customer = result.rows[0];
     
     let passwordValid = false;
-    if (customer.password) {
+    if (customer.Password) {
       const bcrypt = await import('bcryptjs');
-      passwordValid = await bcrypt.compare(password, customer.password);
+      passwordValid = await bcrypt.compare(password, customer.Password);
     } else {
       passwordValid = password === '0000';
     }
@@ -43,13 +43,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
     
     const phonesResult = await pool.query(
-      'SELECT phone FROM customer_phone WHERE customerid = $1',
-      [customer.customerid]
+      'SELECT "Phone" FROM customer_phone WHERE "CustomerID" = $1',
+      [customer.CustomerID]
     );
     
     const jwt = await import('jsonwebtoken');
     const token = jwt.sign(
-      { id: customer.customerid, type: 'customer', nationalId: customer.nationalid },
+      { id: customer.CustomerID, type: 'customer', nationalId: customer.NationalID },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       { expiresIn: '24h' }
     );
@@ -57,18 +57,18 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return response.status(200).json({
       token,
       user: {
-        id: customer.customerid,
+        id: customer.CustomerID,
         type: 'customer',
-        name: `${customer.firstname} ${customer.lastname}`,
-        nationalId: customer.nationalid,
-        firstName: customer.firstname,
-        lastName: customer.lastname,
-        gender: customer.gender,
-        street: customer.street,
-        area: customer.area,
-        state: customer.state,
-        dateOfBirth: customer.dateofbirth,
-        phones: phonesResult.rows.map(p => p.phone),
+        name: `${customer.FirstName} ${customer.LastName}`,
+        nationalId: customer.NationalID,
+        firstName: customer.FirstName,
+        lastName: customer.LastName,
+        gender: customer.Gender,
+        street: customer.Street,
+        area: customer.Area,
+        state: customer.State,
+        dateOfBirth: customer.DateOfBirth,
+        phones: phonesResult.rows.map(p => p.Phone),
       }
     });
   } catch (error) {
