@@ -6,6 +6,17 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+// Debug: log safe DB connection details (no password)
+if (process.env.DATABASE_URL) {
+  const dbUrl = new URL(process.env.DATABASE_URL);
+  console.log('DB Connection:', {
+    host: dbUrl.hostname,
+    user: dbUrl.username,
+    port: dbUrl.port,
+    database: dbUrl.pathname.replace('/', '')
+  });
+}
+
 const getEmployeeRole = async (employeeId) => {
   try {
     const manager = await pool.query('SELECT * FROM manager_details WHERE "EmployeeID" = $1', [employeeId]);
