@@ -84,7 +84,7 @@ export default async function handler(request, response) {
     const role = await getEmployeeRole(employee.employeeid);
     
     const token = jwt.sign(
-      { id: employee.employeeid, type: 'employee' },
+      { id: employee.employeeid, type: 'employee', name: `${employee.firstname} ${employee.lastname}` },
       process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-secret',
       { expiresIn: '1d' }
     );

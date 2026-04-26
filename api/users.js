@@ -30,6 +30,10 @@ const calculateBalance = async (accountId) => {
   }
 };
 
+const isManager = (user) => {
+  return user.id === 1 || user.name === 'Mohamed Anwar';
+};
+
 export default async function handler(request, response) {
   const user = authenticateToken(request);
   if (!user || user.type !== 'employee') {
@@ -38,6 +42,14 @@ export default async function handler(request, response) {
 
   const action = request.query.action || request.query.action;
   const method = request.method;
+
+  // Check if this is a write operation
+  const isWrite = method === 'POST' || method === 'PUT' || method === 'DELETE';
+  
+  // Only Mohamed Anwar (id=1) can do write operations
+  if (isWrite && !isManager(user)) {
+    return response.status(403).json({ message: 'Only managers can perform this action' });
+  }
 
   try {
     if (method === 'GET') {
