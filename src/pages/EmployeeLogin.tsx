@@ -23,10 +23,11 @@ const EmployeeLogin = () => {
         login(result.user);
         navigate('/employee');
       } else {
-        setError(result?.error || 'Invalid credentials');
+        setError(typeof result === 'object' ? JSON.stringify(result) : (result?.error || 'Invalid credentials'));
       }
     } catch (err: any) {
-      setError(err?.message || 'Unable to login. Please try again.');
+      const errorMessage = err?.response?.data?.error || err?.message || err?.error || 'Unable to login. Please try again.';
+      setError(String(errorMessage));
     } finally {
       setLoading(false);
     }

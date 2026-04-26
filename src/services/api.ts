@@ -7,6 +7,14 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+const extractErrorMessage = (err: any): string => {
+  if (err.response?.data?.error) return String(err.response.data.error);
+  if (err.response?.statusText) return `Error ${err.response.status}: ${err.response.statusText}`;
+  if (err.message) return String(err.message);
+  if (err.error) return String(err.error);
+  return 'An unexpected error occurred';
+};
+
 export const login = {
   customer: async (nationalId: string, password: string) => {
     try {
@@ -18,10 +26,7 @@ export const login = {
       });
       return response.data;
     } catch (error: any) {
-      if (error.response) {
-        throw new Error(error.response.data?.error || `Error: ${error.response.status}`);
-      }
-      throw new Error('Network error. Please check your connection.');
+      throw new Error(extractErrorMessage(error));
     }
   },
   
@@ -35,10 +40,7 @@ export const login = {
       });
       return response.data;
     } catch (error: any) {
-      if (error.response) {
-        throw new Error(error.response.data?.error || `Error: ${error.response.status}`);
-      }
-      throw new Error('Network error. Please check your connection.');
+      throw new Error(extractErrorMessage(error));
     }
   },
 };
