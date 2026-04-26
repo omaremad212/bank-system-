@@ -141,7 +141,7 @@ export default async function handler(request, response) {
 
     if (method === 'POST' && action === 'customers') {
       console.log('POST customers received:', request.body);
-      const { nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, password, phones } = request.body;
+      const { nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, phones } = request.body;
       
       if (!nationalId || !firstName || !lastName) {
         console.log('Missing required fields');
@@ -154,9 +154,9 @@ export default async function handler(request, response) {
       }
 
       const result = await pool.query(
-        `INSERT INTO customer (nationalid, firstname, lastname, gender, street, area, state, dateofbirth, password)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING customerid`,
-        [nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, password]
+        `INSERT INTO customer (nationalid, firstname, lastname, gender, street, area, state, dateofbirth)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING customerid`,
+        [nationalId, firstName, lastName, gender, street, area, state, dateOfBirth]
       );
 
       const customerId = result.rows[0].customerid;
