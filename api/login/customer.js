@@ -14,7 +14,7 @@ export default async function handler(request, response) {
   try {
     const { nationalId, password } = request.body;
     
-    console.log('Customer login attempt:', { nationalId, password });
+    console.log('Customer login attempt:', { nationalId });
     
     if (!nationalId || !password) {
       return response.status(400).json({ message: 'National ID and password required' });

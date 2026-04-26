@@ -32,7 +32,7 @@ export default async function handler(request, response) {
   try {
     const { employeeId, password } = request.body;
     
-    console.log('Employee login attempt:', { employeeId, password });
+    console.log('Employee login attempt:', { employeeId: empId });
     
     if (!employeeId || !password) {
       return response.status(400).json({ message: 'Employee ID and password required' });
