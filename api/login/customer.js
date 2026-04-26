@@ -1,4 +1,5 @@
 import pg from 'pg';
+import jwt from 'jsonwebtoken';
 
 const { Pool } = pg;
 
@@ -13,8 +14,6 @@ export default async function handler(request, response) {
 
   try {
     const { nationalId, password } = request.body;
-    
-    console.log('Customer login attempt:', { nationalId });
     
     if (!nationalId || !password) {
       return response.status(400).json({ message: 'National ID and password required' });
@@ -31,7 +30,6 @@ export default async function handler(request, response) {
     
     const customer = result.rows[0];
     
-    // Accept plain text "0000" or bcrypt-hashed "0000"
     let passwordValid = false;
     if (customer.password) {
       if (customer.password.startsWith('$2')) {
@@ -39,7 +37,6 @@ export default async function handler(request, response) {
           const bcrypt = await import('bcryptjs');
           passwordValid = await bcrypt.compare(password, customer.password);
         } catch (e) {
-          console.error('bcrypt compare error:', e);
           passwordValid = false;
         }
       } else {
@@ -58,11 +55,10 @@ export default async function handler(request, response) {
       [customer.customerid]
     );
     
-    const jwt = await import('jsonwebtoken');
     const token = jwt.sign(
       { id: customer.customerid, type: 'customer', nationalId: customer.nationalid },
-      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-      { expiresIn: '24h' }
+      process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-secret',
+      { expiresIn: '1d' }
     );
     
     return response.status(200).json({

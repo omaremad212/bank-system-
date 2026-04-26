@@ -1,4 +1,5 @@
 import pg from 'pg';
+import jwt from 'jsonwebtoken';
 
 const { Pool } = pg;
 
@@ -19,7 +20,6 @@ const getEmployeeRole = async (employeeId) => {
     
     return { roleType: 'Employee' };
   } catch (e) {
-    console.log('getEmployeeRole error:', e);
     return { roleType: 'Employee' };
   }
 };
@@ -36,10 +36,7 @@ export default async function handler(request, response) {
       return response.status(400).json({ message: 'Employee ID and password required' });
     }
 
-    // Handle both string and number employeeId
     const empId = typeof employeeId === 'string' ? parseInt(employeeId) : employeeId;
-    
-    console.log('Employee login attempt:', { employeeId: empId });
     
     const result = await pool.query(
       'SELECT * FROM employee WHERE employeeid = $1',
@@ -59,7 +56,6 @@ export default async function handler(request, response) {
           const bcrypt = await import('bcryptjs');
           passwordValid = await bcrypt.compare(password, employee.password);
         } catch (e) {
-          console.error('bcrypt compare error:', e);
           passwordValid = false;
         }
       } else {
@@ -87,11 +83,10 @@ export default async function handler(request, response) {
     
     const role = await getEmployeeRole(employee.employeeid);
     
-    const jwt = await import('jsonwebtoken');
     const token = jwt.sign(
       { id: employee.employeeid, type: 'employee' },
-      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-      { expiresIn: '24h' }
+      process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-secret',
+      { expiresIn: '1d' }
     );
     
     return response.status(200).json({
