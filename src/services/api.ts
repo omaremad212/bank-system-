@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_BASE = '/api';
 
@@ -7,21 +7,43 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+const handleApiError = (error: unknown) => {
+  if (AxiosError.isAxiosError(error)) {
+    const response = error.response;
+    if (response) {
+      throw new Error(response.data?.error || `Server error: ${response.status}`);
+    }
+  }
+  throw new Error('Network error. Please check your connection.');
+};
+
 export const login = {
   customer: async (nationalId: string, password: string) => {
-    const response = await axios.post(`${API_BASE}/login/customer`, {
-      nationalId,
-      password,
-    });
-    return response.data;
+    try {
+      const response = await axios.post(`${API_BASE}/login/customer`, {
+        nationalId,
+        password,
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
   },
   
   employee: async (employeeId: string, password: string) => {
-    const response = await axios.post(`${API_BASE}/login/employee`, {
-      employeeId: parseInt(employeeId),
-      password,
-    });
-    return response.data;
+    try {
+      const response = await axios.post(`${API_BASE}/login/employee`, {
+        employeeId: parseInt(employeeId),
+        password,
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
   },
 };
 
