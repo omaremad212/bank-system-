@@ -32,14 +32,14 @@ export default async function handler(request, response) {
   try {
     const { employeeId, password } = request.body;
     
-    console.log('Employee login attempt:', { employeeId: empId });
-    
     if (!employeeId || !password) {
       return response.status(400).json({ message: 'Employee ID and password required' });
     }
 
     // Handle both string and number employeeId
     const empId = typeof employeeId === 'string' ? parseInt(employeeId) : employeeId;
+    
+    console.log('Employee login attempt:', { employeeId: empId });
     
     const result = await pool.query(
       'SELECT * FROM employee WHERE "EmployeeID" = $1',
