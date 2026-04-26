@@ -21,6 +21,7 @@ const EmployeeLogin = () => {
       
       if (result && result.token && result.user) {
         login(result.user);
+        localStorage.setItem('token', result.token);
         navigate('/employee');
       } else {
         const msg = result?.message || result?.error || 'Invalid credentials';

@@ -21,6 +21,7 @@ const CustomerLogin = () => {
       
       if (result && result.token && result.user) {
         login(result.user);
+        localStorage.setItem('token', result.token);
         navigate('/customer');
       } else {
         const msg = result?.message || result?.error || 'Invalid credentials';
