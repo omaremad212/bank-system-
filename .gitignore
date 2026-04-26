@@ -4,6 +4,10 @@ dist/
 *.log
 .env
 .env.local
+.env.example
 .vscode/
 .idea/
 .vercel
+.next/
+bank-system-/
+*.db

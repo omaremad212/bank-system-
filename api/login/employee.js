@@ -32,31 +32,46 @@ export default async function handler(request, response) {
   try {
     const { employeeId, password } = request.body;
     
+    console.log('Employee login attempt:', { employeeId, password });
+    
     if (!employeeId || !password) {
       return response.status(400).json({ message: 'Employee ID and password required' });
     }
 
+    // Handle both string and number employeeId
+    const empId = typeof employeeId === 'string' ? parseInt(employeeId) : employeeId;
+    
     const result = await pool.query(
       'SELECT * FROM employee WHERE "EmployeeID" = $1',
-      [employeeId]
+      [empId]
     );
     
     if (result.rows.length === 0) {
-      return response.status(401).json({ message: 'Invalid Employee ID' });
+      return response.status(401).json({ message: 'Invalid Employee ID or password' });
     }
     
     const employee = result.rows[0];
     
+    // Accept plain text "0000" or bcrypt-hashed "0000"
     let passwordValid = false;
     if (employee.Password) {
-      const bcrypt = await import('bcryptjs');
-      passwordValid = await bcrypt.compare(password, employee.Password);
+      if (employee.Password.startsWith('$2')) {
+        try {
+          const bcrypt = await import('bcryptjs');
+          passwordValid = await bcrypt.compare(password, employee.Password);
+        } catch (e) {
+          console.error('bcrypt compare error:', e);
+          passwordValid = false;
+        }
+      } else {
+        passwordValid = employee.Password === password;
+      }
     } else {
       passwordValid = password === '0000';
     }
     
     if (!passwordValid) {
-      return response.status(401).json({ message: 'Invalid password' });
+      return response.status(401).json({ message: 'Invalid Employee ID or password' });
     }
     
     const departmentsResult = await pool.query(
@@ -100,6 +115,6 @@ export default async function handler(request, response) {
     });
   } catch (error) {
     console.error('Employee login error:', error);
-    return response.status(500).json({ message: 'Internal server error' });
+    return response.status(500).json({ message: 'Login failed. Please try again.' });
   }
 }

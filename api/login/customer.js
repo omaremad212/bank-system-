@@ -14,6 +14,8 @@ export default async function handler(request, response) {
   try {
     const { nationalId, password } = request.body;
     
+    console.log('Customer login attempt:', { nationalId, password });
+    
     if (!nationalId || !password) {
       return response.status(400).json({ message: 'National ID and password required' });
     }
@@ -24,21 +26,33 @@ export default async function handler(request, response) {
     );
     
     if (result.rows.length === 0) {
-      return response.status(401).json({ message: 'Invalid National ID' });
+      return response.status(401).json({ message: 'Invalid National ID or password' });
     }
     
     const customer = result.rows[0];
     
+    // Accept plain text "0000" or bcrypt-hashed "0000"
     let passwordValid = false;
     if (customer.Password) {
-      const bcrypt = await import('bcryptjs');
-      passwordValid = await bcrypt.compare(password, customer.Password);
+      // Check if it's bcrypt hash or plain text
+      if (customer.Password.startsWith('$2')) {
+        try {
+          const bcrypt = await import('bcryptjs');
+          passwordValid = await bcrypt.compare(password, customer.Password);
+        } catch (e) {
+          console.error('bcrypt compare error:', e);
+          passwordValid = false;
+        }
+      } else {
+        passwordValid = customer.Password === password;
+      }
     } else {
+      // No password in DB, accept "0000"
       passwordValid = password === '0000';
     }
     
     if (!passwordValid) {
-      return response.status(401).json({ message: 'Invalid password' });
+      return response.status(401).json({ message: 'Invalid National ID or password' });
     }
     
     const phonesResult = await pool.query(
@@ -72,6 +86,6 @@ export default async function handler(request, response) {
     });
   } catch (error) {
     console.error('Customer login error:', error);
-    return response.status(500).json({ message: 'Internal server error' });
+    return response.status(500).json({ message: 'Login failed. Please try again.' });
   }
 }

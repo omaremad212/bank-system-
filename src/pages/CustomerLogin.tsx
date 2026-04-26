@@ -131,7 +131,7 @@ const CustomerLogin = () => {
           </form>
 
           <div className="login-hint">
-            Demo password: <strong>0000</strong>
+            Demo: NationalID <strong>29901011234567</strong> / Password <strong>0000</strong>
           </div>
 
           <div className="login-footer">
