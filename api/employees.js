@@ -1,4 +1,5 @@
 import pg from 'pg';
+import jwt from 'jsonwebtoken';
 
 const { Pool } = pg;
 
@@ -6,15 +7,13 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-const authenticateToken = async (req) => {
+const authenticateToken = (req) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader?.split(' ')[1];
   if (!token) return null;
   try {
-    const jwt = await import('jsonwebtoken');
-    return jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+    return jwt.verify(token, process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-secret');
   } catch (e) {
-    console.log('Auth error:', e);
     return null;
   }
 };
@@ -22,37 +21,52 @@ const authenticateToken = async (req) => {
 const getEmployeeRole = async (employeeId) => {
   try {
     const manager = await pool.query('SELECT * FROM manager_details WHERE employeeid = $1', [employeeId]);
-    if (manager.rows.length > 0) return { roleType: 'Manager', ...manager.rows[0] };
+    if (manager.rows.length > 0) return { roleType: 'Manager' };
     
     const teller = await pool.query('SELECT * FROM teller_details WHERE employeeid = $1', [employeeId]);
-    if (teller.rows.length > 0) return { roleType: 'Teller', ...teller.rows[0] };
+    if (teller.rows.length > 0) return { roleType: 'Teller' };
     
     const clerk = await pool.query('SELECT * FROM clerk_details WHERE employeeid = $1', [employeeId]);
-    if (clerk.rows.length > 0) return { roleType: 'Clerk', ...clerk.rows[0] };
+    if (clerk.rows.length > 0) return { roleType: 'Clerk' };
     
     return { roleType: 'Employee' };
   } catch (e) {
-    console.log('getEmployeeRole error:', e);
     return { roleType: 'Employee' };
   }
 };
 
 export default async function handler(request, response) {
-  const user = await authenticateToken(request);
+  const user = authenticateToken(request);
   
   if (!user || user.type !== 'employee') {
     return response.status(403).json({ message: 'Employee access required' });
   }
 
   try {
-    const result = await pool.query('SELECT * FROM employee');
+    const result = await pool.query('SELECT employeeid, firstname, lastname, gender, salary, email, departmentid FROM employee');
     
     const employeesWithRole = await Promise.all(result.rows.map(async (employee) => {
       const role = await getEmployeeRole(employee.employeeid);
-      const departmentResult = await pool.query('SELECT * FROM department WHERE departmentid = $1', [employee.departmentid]);
+      const departmentResult = await pool.query('SELECT departmentname FROM department WHERE departmentid = $1', [employee.departmentid]);
       return {
-        ...employee,
+        // PascalCase
+        EmployeeID: employee.employeeid,
+        FirstName: employee.firstname,
+        LastName: employee.lastname,
+        Gender: employee.gender,
+        Salary: employee.salary,
+        Email: employee.email,
+        DepartmentID: employee.departmentid,
         ...role,
+        DepartmentName: departmentResult.rows[0]?.departmentname,
+        // lowercase
+        employeeid: employee.employeeid,
+        firstname: employee.firstname,
+        lastname: employee.lastname,
+        gender: employee.gender,
+        salary: employee.salary,
+        email: employee.email,
+        departmentid: employee.departmentid,
         departmentName: departmentResult.rows[0]?.departmentname,
       };
     }));
