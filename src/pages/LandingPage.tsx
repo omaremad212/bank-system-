@@ -59,7 +59,7 @@ const LandingPage = () => {
           </div>
 
           <div className="login-hint" style={{ marginTop: '2rem', textAlign: 'center' }}>
-            Demo Password: <strong>0000</strong>
+            Don't have an account? <Link to="/signup" style={{ color: 'var(--primary)', fontWeight: 600 }}>Sign Up</Link>
           </div>
         </div>
       </div>

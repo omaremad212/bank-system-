@@ -7,6 +7,22 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+export const signup = {
+  customer: async (data: { nationalId: string; firstName: string; lastName: string; gender: string; street?: string; area?: string; state?: string; dateOfBirth?: string; password: string }) => {
+    const response = await axios.post(`${API_BASE}/signup`, { role: 'customer', ...data }, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return response.data;
+  },
+  
+  employee: async (data: { firstName: string; lastName: string; gender: string; email: string; departmentId?: number; password: string }) => {
+    const response = await axios.post(`${API_BASE}/signup`, { role: 'employee', ...data }, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return response.data;
+  },
+};
+
 export const login = {
   customer: async (nationalId: string, password: string) => {
     const response = await axios.post(`${API_BASE}/login/customer`, {

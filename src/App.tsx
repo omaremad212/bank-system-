@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
+import SignUp from './pages/SignUp';
 import CustomerLogin from './pages/CustomerLogin';
 import EmployeeLogin from './pages/EmployeeLogin';
 import CustomerDashboard from './pages/CustomerDashboard';
@@ -201,6 +202,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      
+      <Route path="/signup" element={<SignUp />} />
       
       <Route path="/login/customer" element={
         <AuthRoute><CustomerLogin /></AuthRoute>
