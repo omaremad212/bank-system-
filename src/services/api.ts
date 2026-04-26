@@ -4,7 +4,11 @@ const API_BASE = '/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+  if (!token) {
+    console.error('NO TOKEN FOUND IN localStorage');
+    return { 'Content-Type': 'application/json' };
+  }
+  return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 };
 
 export const signup = {

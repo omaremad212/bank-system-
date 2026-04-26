@@ -31,11 +31,14 @@ const calculateBalance = async (accountId) => {
 };
 
 const isManager = (user) => {
-  return user.id === 1 || user.name === 'Mohamed Anwar';
+  console.log('Checking manager, user:', user);
+  return user.id === 1;
 };
 
 export default async function handler(request, response) {
   const user = authenticateToken(request);
+  console.log('Auth user:', user);
+  
   if (!user || user.type !== 'employee') {
     return response.status(403).json({ message: 'Employee access required' });
   }
@@ -46,7 +49,7 @@ export default async function handler(request, response) {
   // Check if this is a write operation
   const isWrite = method === 'POST' || method === 'PUT' || method === 'DELETE';
   
-  // Only Mohamed Anwar (id=1) can do write operations
+  // Only employee ID 1 (Mohamed Anwar) can do write operations
   if (isWrite && !isManager(user)) {
     return response.status(403).json({ message: 'Only managers can perform this action' });
   }
