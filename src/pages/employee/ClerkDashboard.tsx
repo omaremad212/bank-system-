@@ -99,14 +99,14 @@ const ClerkDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {customers.slice(0, 5).map((customer) => (
-                <tr key={customer.CustomerID}>
-                  <td>#{customer.CustomerID}</td>
-                  <td>{customer.FirstName} {customer.LastName}</td>
-                  <td>{customer.NationalID}</td>
-                  <td>{customer.Gender}</td>
-                  <td>{customer.State}</td>
-                  <td>{accounts.filter(a => a.CustomerID === customer.CustomerID).length}</td>
+              {customers.slice(0, 5).map((customer: any) => (
+                <tr key={customer.customerid || customer.id}>
+                  <td>#{customer.customerid || customer.id}</td>
+                  <td>{customer.firstname && customer.lastname ? `${customer.firstname} ${customer.lastname}` : '-'}</td>
+                  <td>{customer.nationalid || '-'}</td>
+                  <td>{customer.gender || '-'}</td>
+                  <td>{customer.state || '-'}</td>
+                  <td>{accounts.filter((a: any) => a.customerid === (customer.customerid || customer.id)).length}</td>
                 </tr>
               ))}
             </tbody>

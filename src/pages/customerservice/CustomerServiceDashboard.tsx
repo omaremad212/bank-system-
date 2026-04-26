@@ -131,11 +131,11 @@ const CustomerServiceDashboard = () => {
             </thead>
             <tbody>
               {customers.slice(0, 5).map((customer: any) => (
-                <tr key={customer.CustomerID}>
-                  <td>{customer.CustomerID}</td>
-                  <td>{customer.FirstName} {customer.LastName}</td>
-                  <td>{customer.NationalID}</td>
-                  <td>{customer.phones?.[0] || 'N/A'}</td>
+                <tr key={customer.customerid || customer.id}>
+                  <td>{customer.customerid || customer.id}</td>
+                  <td>{customer.firstname && customer.lastname ? `${customer.firstname} ${customer.lastname}` : '-'}</td>
+                  <td>{customer.nationalid || '-'}</td>
+                  <td>{customer.phones?.[0] || '-'}</td>
                   <td>
                     <button className="btn btn-sm btn-primary">View</button>
                   </td>

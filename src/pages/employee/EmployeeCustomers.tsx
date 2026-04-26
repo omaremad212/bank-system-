@@ -56,14 +56,14 @@ const EmployeeCustomers = () => {
               </thead>
               <tbody>
                 {customers.map((customer) => (
-                  <tr key={customer.CustomerID}>
-                    <td>{customer.CustomerID}</td>
-                    <td>{customer.FirstName} {customer.LastName}</td>
-                    <td>{customer.NationalID}</td>
-                    <td>{customer.Gender}</td>
-                    <td>{customer.Street}, {customer.Area}, {customer.State}</td>
-                    <td>{customer.DateOfBirth}</td>
-                    <td>{customer.phones?.join(', ')}</td>
+                  <tr key={customer.customerid || customer.id}>
+                    <td>{customer.customerid || customer.id || '-'}</td>
+                    <td>{customer.firstname && customer.lastname ? `${customer.firstname} ${customer.lastname}` : '-'}</td>
+                    <td>{customer.nationalid || '-'}</td>
+                    <td>{customer.gender || '-'}</td>
+                    <td>{customer.street || customer.area || customer.state ? `${customer.street || ''}, ${customer.area || ''}, ${customer.state || ''}`.replace(/^, |, $/g, '') : '-'}</td>
+                    <td>{customer.dateofbirth || '-'}</td>
+                    <td>{customer.phones?.join(', ') || '-'}</td>
                   </tr>
                 ))}
               </tbody>

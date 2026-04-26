@@ -57,27 +57,27 @@ const ClerkCustomers = () => {
               </tr>
             </thead>
             <tbody>
-              {customers.map((customer) => (
-                <tr key={customer.CustomerID}>
-                  <td>#{customer.CustomerID}</td>
+              {customers.map((customer: any) => (
+                <tr key={customer.customerid || customer.id}>
+                  <td>#{customer.customerid || customer.id}</td>
                   <td>
                     <div style={{ fontWeight: 600 }}>
-                      {customer.FirstName} {customer.LastName}
+                      {customer.firstname && customer.lastname ? `${customer.firstname} ${customer.lastname}` : '-'}
                     </div>
                   </td>
                   <td>
-                    <code style={{ fontFamily: 'monospace' }}>{customer.NationalID}</code>
+                    <code style={{ fontFamily: 'monospace' }}>{customer.nationalid || '-'}</code>
                   </td>
-                  <td>{customer.Gender}</td>
+                  <td>{customer.gender || '-'}</td>
                   <td>
                     <div style={{ fontSize: '0.85rem' }}>
-                      <div>{customer.Street}</div>
+                      <div>{customer.street || '-'}</div>
                       <div style={{ color: 'var(--text-muted)' }}>
-                        {customer.Area}, {customer.State}
+                        {customer.area || customer.state ? `${customer.area || ''}, ${customer.state || ''}`.replace(/^, |, $/g, '') : '-'}
                       </div>
                     </div>
                   </td>
-                  <td>{customer.DateOfBirth}</td>
+                  <td>{customer.dateofbirth || '-'}</td>
                   <td>
                     <button
                       className="btn btn-secondary"

@@ -39,7 +39,7 @@ const ManagerCustomers = () => {
     try {
       if (editingCustomer) {
         console.log('Updating customer:', editingCustomer.CustomerID);
-        await api.admin.updateCustomer(editingCustomer.CustomerID, formData);
+        await api.admin.updateCustomer(editingCustomer.customerid || editingCustomer.id, formData);
       } else {
         console.log('Creating customer with data:', formData);
         await api.admin.createCustomer(formData);
@@ -67,14 +67,14 @@ const ManagerCustomers = () => {
   const handleEdit = (customer: any) => {
     setEditingCustomer(customer);
     setFormData({
-      firstName: customer.FirstName,
-      lastName: customer.LastName,
-      nationalId: customer.NationalID,
-      gender: customer.Gender,
-      dateOfBirth: customer.DateOfBirth || '',
-      street: customer.Street || '',
-      area: customer.Area || '',
-      state: customer.State || '',
+      firstName: customer.firstname,
+      lastName: customer.lastname,
+      nationalId: customer.nationalid,
+      gender: customer.gender,
+      dateOfBirth: customer.dateofbirth || '',
+      street: customer.street || '',
+      area: customer.area || '',
+      state: customer.state || '',
       phone: customer.phones?.[0] || '',
     });
     setShowModal(true);
@@ -143,16 +143,16 @@ const ManagerCustomers = () => {
           </thead>
           <tbody>
             {customers.map((customer: any) => (
-              <tr key={customer.CustomerID}>
-                <td>{customer.CustomerID}</td>
-                <td>{customer.FirstName} {customer.LastName}</td>
-                <td>{customer.NationalID}</td>
-                <td>{customer.Gender}</td>
-                <td>{customer.phones?.[0] || 'N/A'}</td>
-                <td>{customer.Street}, {customer.Area}</td>
+              <tr key={customer.customerid || customer.id}>
+                <td>{customer.customerid || customer.id || '-'}</td>
+                <td>{customer.firstname && customer.lastname ? `${customer.firstname} ${customer.lastname}` : '-'}</td>
+                <td>{customer.nationalid || '-'}</td>
+                <td>{customer.gender || '-'}</td>
+                <td>{customer.phones?.[0] || '-'}</td>
+                <td>{customer.street || customer.area ? `${customer.street || ''}, ${customer.area || ''}`.replace(/^, |, $/g, '') : '-'}</td>
                 <td>
                   <button className="btn btn-sm btn-primary" onClick={() => handleEdit(customer)}>Edit</button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(customer.CustomerID)} style={{ marginLeft: '0.5rem' }}>Delete</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(customer.customerid || customer.id)} style={{ marginLeft: '0.5rem' }}>Delete</button>
                 </td>
               </tr>
             ))}

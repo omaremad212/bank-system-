@@ -122,9 +122,9 @@ const EmployeeAccounts = () => {
                     required
                   >
                     <option value={0}>Select Customer</option>
-                    {customers.map((customer) => (
-                      <option key={customer.CustomerID} value={customer.CustomerID}>
-                        {customer.FirstName} {customer.LastName}
+                    {customers.map((customer: any) => (
+                      <option key={customer.customerid || customer.id} value={customer.customerid || customer.id}>
+                        {customer.firstname && customer.lastname ? `${customer.firstname} ${customer.lastname}` : '-'}
                       </option>
                     ))}
                   </select>
