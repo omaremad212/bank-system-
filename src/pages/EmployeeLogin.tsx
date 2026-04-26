@@ -24,12 +24,17 @@ const EmployeeLogin = () => {
         navigate('/employee');
       } else {
         const msg = result?.message || result?.error || 'Invalid credentials';
-        setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+        setError(String(msg));
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || err?.error || 'Login failed';
-      setError(String(msg));
+      const message = 
+        err?.response?.data?.message || 
+        err?.response?.data?.error || 
+        err?.message || 
+        err?.error ||
+        'Login failed. Please try again.';
+      setError(String(message));
     } finally {
       setLoading(false);
     }
