@@ -1,4 +1,3 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
 
 const { Pool } = pg;
@@ -33,7 +32,7 @@ const calculateBalance = async (accountId) => {
   }
 };
 
-export default async function handler(request: VercelRequest, response: VercelResponse) {
+export default async function handler(request, response) {
   const user = await authenticateToken(request);
   if (!user || user.type !== 'employee') {
     return response.status(403).json({ message: 'Employee access required' });

@@ -1,4 +1,3 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
 
 const { Pool } = pg;
@@ -7,7 +6,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-export default async function handler(request: VercelRequest, response: VercelResponse) {
+export default async function handler(request, response) {
   if (request.method !== 'POST') {
     return response.status(405).json({ message: 'Method not allowed' });
   }
