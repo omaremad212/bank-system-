@@ -37,28 +37,28 @@ const isEmployee = (req, res, next) => {
 };
 
 const calculateBalance = async (accountId) => {
-  const [transactions] = await pool.query(
-    'SELECT SUM(CASE WHEN TransactionType = "Deposit" THEN Amount ELSE -Amount END) as balance FROM transaction WHERE AccountID = ?',
+  const result = await pool.query(
+    'SELECT COALESCE(SUM(CASE WHEN TransactionType = \'Deposit\' THEN Amount ELSE -Amount END), 0) as balance FROM transaction WHERE AccountID = $1',
     [accountId]
   );
-  return parseFloat(transactions[0].balance || 0);
+  return parseFloat(result.rows[0]?.balance || 0);
 };
 
 const getAccountType = async (accountId) => {
-  const [savings] = await pool.query('SELECT * FROM savings_account WHERE AccountID = ?', [accountId]);
-  if (savings.length > 0) return { type: 'Savings', ...savings[0] };
-  const [checking] = await pool.query('SELECT * FROM checking_account WHERE AccountID = ?', [accountId]);
-  if (checking.length > 0) return { type: 'Checking', ...checking[0] };
+  const savings = await pool.query('SELECT * FROM savings_account WHERE AccountID = $1', [accountId]);
+  if (savings.rows.length > 0) return { type: 'Savings', ...savings.rows[0] };
+  const checking = await pool.query('SELECT * FROM checking_account WHERE AccountID = $1', [accountId]);
+  if (checking.rows.length > 0) return { type: 'Checking', ...checking.rows[0] };
   return null;
 };
 
 const getEmployeeRole = async (employeeId) => {
-  const [manager] = await pool.query('SELECT * FROM manager_details WHERE EmployeeID = ?', [employeeId]);
-  if (manager.length > 0) return { roleType: 'Manager', ...manager[0] };
-  const [teller] = await pool.query('SELECT * FROM teller_details WHERE EmployeeID = ?', [employeeId]);
-  if (teller.length > 0) return { roleType: 'Teller', ...teller[0] };
-  const [clerk] = await pool.query('SELECT * FROM clerk_details WHERE EmployeeID = ?', [employeeId]);
-  if (clerk.length > 0) return { roleType: 'Clerk', ...clerk[0] };
+  const manager = await pool.query('SELECT * FROM manager_details WHERE EmployeeID = $1', [employeeId]);
+  if (manager.rows.length > 0) return { roleType: 'Manager', ...manager.rows[0] };
+  const teller = await pool.query('SELECT * FROM teller_details WHERE EmployeeID = $1', [employeeId]);
+  if (teller.rows.length > 0) return { roleType: 'Teller', ...teller.rows[0] };
+  const clerk = await pool.query('SELECT * FROM clerk_details WHERE EmployeeID = $1', [employeeId]);
+  if (clerk.rows.length > 0) return { roleType: 'Clerk', ...clerk.rows[0] };
   return { roleType: 'Employee' };
 };
 
@@ -70,20 +70,20 @@ app.post('/api/login/customer', async (req, res) => {
       return res.status(400).json({ error: 'National ID and password required' });
     }
     
-    const [customers] = await pool.query(
-      'SELECT * FROM customer WHERE NationalID = ?',
+    const result = await pool.query(
+      'SELECT * FROM customer WHERE NationalID = $1',
       [nationalId]
     );
     
-    if (customers.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid National ID' });
     }
     
-    const customer = customers[0];
+    const customer = result.rows[0];
     
     let passwordValid = false;
-    if (customer.Password) {
-      passwordValid = await bcrypt.compare(password, customer.Password);
+    if (customer.password) {
+      passwordValid = await bcrypt.compare(password, customer.password);
     } else {
       passwordValid = password === '0000';
     }
@@ -93,31 +93,31 @@ app.post('/api/login/customer', async (req, res) => {
     }
     
     const token = jwt.sign(
-      { id: customer.CustomerID, type: 'customer', nationalId: customer.NationalID },
+      { id: customer.customerid, type: 'customer', nationalId: customer.nationalid },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
     
-    const [phones] = await pool.query(
-      'SELECT Phone FROM customer_phone WHERE CustomerID = ?',
-      [customer.CustomerID]
+    const phonesResult = await pool.query(
+      'SELECT Phone FROM customer_phone WHERE CustomerID = $1',
+      [customer.customerid]
     );
     
     res.json({
       token,
       user: {
-        id: customer.CustomerID,
+        id: customer.customerid,
         type: 'customer',
-        name: `${customer.FirstName} ${customer.LastName}`,
-        nationalId: customer.NationalID,
-        firstName: customer.FirstName,
-        lastName: customer.LastName,
-        gender: customer.Gender,
-        street: customer.Street,
-        area: customer.Area,
-        state: customer.State,
-        dateOfBirth: customer.DateOfBirth,
-        phones: phones.map(p => p.Phone),
+        name: `${customer.firstname} ${customer.lastname}`,
+        nationalId: customer.nationalid,
+        firstName: customer.firstname,
+        lastName: customer.lastname,
+        gender: customer.gender,
+        street: customer.street,
+        area: customer.area,
+        state: customer.state,
+        dateOfBirth: customer.dateofbirth,
+        phones: phonesResult.rows.map(p => p.phone),
       }
     });
   } catch (error) {
@@ -134,20 +134,20 @@ app.post('/api/login/employee', async (req, res) => {
       return res.status(400).json({ error: 'Employee ID and password required' });
     }
     
-    const [employees] = await pool.query(
-      'SELECT * FROM employee WHERE EmployeeID = ?',
+    const result = await pool.query(
+      'SELECT * FROM employee WHERE EmployeeID = $1',
       [employeeId]
     );
     
-    if (employees.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid Employee ID' });
     }
     
-    const employee = employees[0];
+    const employee = result.rows[0];
     
     let passwordValid = false;
-    if (employee.Password) {
-      passwordValid = await bcrypt.compare(password, employee.Password);
+    if (employee.password) {
+      passwordValid = await bcrypt.compare(password, employee.password);
     } else {
       passwordValid = password === '0000';
     }
@@ -156,22 +156,22 @@ app.post('/api/login/employee', async (req, res) => {
       return res.status(401).json({ error: 'Invalid password' });
     }
     
-    const [departments] = await pool.query(
-      'SELECT * FROM department WHERE DepartmentID = ?',
-      [employee.DepartmentID]
+    const departmentsResult = await pool.query(
+      'SELECT * FROM department WHERE DepartmentID = $1',
+      [employee.departmentid]
     );
-    const department = departments[0];
+    const department = departmentsResult.rows[0];
     
-    const [branches] = department ? await pool.query(
-      'SELECT * FROM branch WHERE BranchID = ?',
-      [department.BranchID]
-    ) : [[]];
-    const branch = branches[0];
+    const branchesResult = department ? await pool.query(
+      'SELECT * FROM branch WHERE BranchID = $1',
+      [department.branchid]
+    ) : { rows: [] };
+    const branch = branchesResult.rows[0];
     
-    const role = await getEmployeeRole(employee.EmployeeID);
+    const role = await getEmployeeRole(employee.employeeid);
     
     const token = jwt.sign(
-      { id: employee.EmployeeID, type: 'employee' },
+      { id: employee.employeeid, type: 'employee' },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -179,18 +179,18 @@ app.post('/api/login/employee', async (req, res) => {
     res.json({
       token,
       user: {
-        id: employee.EmployeeID,
+        id: employee.employeeid,
         type: 'employee',
-        name: `${employee.FirstName} ${employee.LastName}`,
-        firstName: employee.FirstName,
-        lastName: employee.LastName,
-        gender: employee.Gender,
-        salary: employee.Salary,
-        email: employee.Email,
-        departmentId: employee.DepartmentID,
-        departmentName: department?.DepartmentName,
-        branchId: branch?.BranchID,
-        branchName: branch?.BranchName,
+        name: `${employee.firstname} ${employee.lastname}`,
+        firstName: employee.firstname,
+        lastName: employee.lastname,
+        gender: employee.gender,
+        salary: employee.salary,
+        email: employee.email,
+        departmentId: employee.departmentid,
+        departmentName: department?.departmentname,
+        branchId: branch?.branchid,
+        branchName: branch?.branchname,
         ...role,
       }
     });
@@ -206,24 +206,24 @@ app.get('/api/customer/profile', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Customer access required' });
     }
     
-    const [customers] = await pool.query(
-      'SELECT * FROM customer WHERE CustomerID = ?',
+    const result = await pool.query(
+      'SELECT * FROM customer WHERE CustomerID = $1',
       [req.user.id]
     );
     
-    if (customers.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Customer not found' });
     }
     
-    const customer = customers[0];
-    const [phones] = await pool.query(
-      'SELECT Phone FROM customer_phone WHERE CustomerID = ?',
-      [customer.CustomerID]
+    const customer = result.rows[0];
+    const phonesResult = await pool.query(
+      'SELECT Phone FROM customer_phone WHERE CustomerID = $1',
+      [customer.customerid]
     );
     
     res.json({
       ...customer,
-      phones: phones.map(p => p.Phone)
+      phones: phonesResult.rows.map(p => p.phone)
     });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -237,25 +237,25 @@ app.get('/api/customer/accounts', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Customer access required' });
     }
     
-    const [accounts] = await pool.query(
+    const result = await pool.query(
       `SELECT ba.*, 
-              COALESCE(sa.InterestRate, ca.OverdraftLimit) as additional_info,
-              CASE WHEN sa.AccountID IS NOT NULL THEN 'Savings' ELSE 'Checking' END as AccountTypeName
+              COALESCE(sa.interestrate, ca.overdraftlimit) as additional_info,
+              CASE WHEN sa.accountid IS NOT NULL THEN 'Savings' ELSE 'Checking' END as accounttypename
        FROM bank_account ba
-       LEFT JOIN savings_account sa ON ba.AccountID = sa.AccountID
-       LEFT JOIN checking_account ca ON ba.AccountID = ca.AccountID
-       WHERE ba.CustomerID = ?`,
+       LEFT JOIN savings_account sa ON ba.accountid = sa.accountid
+       LEFT JOIN checking_account ca ON ba.accountid = ca.accountid
+       WHERE ba.customerid = $1`,
       [req.user.id]
     );
     
-    const accountsWithBalance = await Promise.all(accounts.map(async (account) => {
-      const balance = await calculateBalance(account.AccountID);
-      const branch = await pool.query('SELECT * FROM branch WHERE BranchID = ?', [account.BranchID]);
+    const accountsWithBalance = await Promise.all(result.rows.map(async (account) => {
+      const balance = await calculateBalance(account.accountid);
+      const branchResult = await pool.query('SELECT * FROM branch WHERE BranchID = $1', [account.branchid]);
       return {
         ...account,
         balance,
-        branchName: branch[0]?.[0]?.BranchName,
-        branchLocation: branch[0]?.[0]?.Location,
+        branchName: branchResult.rows[0]?.branchname,
+        branchLocation: branchResult.rows[0]?.location,
       };
     }));
     
@@ -274,21 +274,21 @@ app.get('/api/customer/accounts/:accountId/transactions', authenticateToken, asy
     
     const { accountId } = req.params;
     
-    const [accounts] = await pool.query(
-      'SELECT * FROM bank_account WHERE AccountID = ? AND CustomerID = ?',
+    const accountsResult = await pool.query(
+      'SELECT * FROM bank_account WHERE AccountID = $1 AND CustomerID = $2',
       [accountId, req.user.id]
     );
     
-    if (accounts.length === 0) {
+    if (accountsResult.rows.length === 0) {
       return res.status(404).json({ error: 'Account not found' });
     }
     
-    const [transactions] = await pool.query(
-      'SELECT * FROM transaction WHERE AccountID = ? ORDER BY Date_Time DESC',
+    const transactionsResult = await pool.query(
+      'SELECT * FROM transaction WHERE AccountID = $1 ORDER BY date_time DESC',
       [accountId]
     );
     
-    res.json(transactions);
+    res.json(transactionsResult.rows);
   } catch (error) {
     console.error('Get transactions error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -307,23 +307,23 @@ app.post('/api/customer/deposit', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Invalid account or amount' });
     }
     
-    const [accounts] = await pool.query(
-      'SELECT * FROM bank_account WHERE AccountID = ? AND CustomerID = ?',
+    const accountsResult = await pool.query(
+      'SELECT * FROM bank_account WHERE AccountID = $1 AND CustomerID = $2',
       [accountId, req.user.id]
     );
     
-    if (accounts.length === 0) {
+    if (accountsResult.rows.length === 0) {
       return res.status(404).json({ error: 'Account not found' });
     }
     
-    const [result] = await pool.query(
-      'INSERT INTO transaction (Amount, TransactionType, AccountID, ATMID) VALUES (?, "Deposit", ?, ?)',
+    const result = await pool.query(
+      'INSERT INTO transaction (amount, transactiontype, accountid, atmid) VALUES ($1, \'Deposit\', $2, $3) RETURNING transactionid',
       [amount, accountId, atmId]
     );
     
     res.json({ 
       success: true, 
-      transactionId: result.insertId,
+      transactionId: result.rows[0].transactionid,
       message: 'Deposit successful' 
     });
   } catch (error) {
@@ -344,12 +344,12 @@ app.post('/api/customer/withdraw', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Invalid account or amount' });
     }
     
-    const [accounts] = await pool.query(
-      'SELECT * FROM bank_account WHERE AccountID = ? AND CustomerID = ?',
+    const accountsResult = await pool.query(
+      'SELECT * FROM bank_account WHERE AccountID = $1 AND CustomerID = $2',
       [accountId, req.user.id]
     );
     
-    if (accounts.length === 0) {
+    if (accountsResult.rows.length === 0) {
       return res.status(404).json({ error: 'Account not found' });
     }
     
@@ -357,22 +357,22 @@ app.post('/api/customer/withdraw', authenticateToken, async (req, res) => {
     const accountDetails = await getAccountType(accountId);
     
     let allowedOverdraft = 0;
-    if (accountDetails?.type === 'Checking' && accountDetails.OverdraftLimit) {
-      allowedOverdraft = parseFloat(accountDetails.OverdraftLimit);
+    if (accountDetails?.type === 'Checking' && accountDetails.overdraftlimit) {
+      allowedOverdraft = parseFloat(accountDetails.overdraftlimit);
     }
     
     if (balance + allowedOverdraft < amount) {
       return res.status(400).json({ error: 'Insufficient funds' });
     }
     
-    const [result] = await pool.query(
-      'INSERT INTO transaction (Amount, TransactionType, AccountID, ATMID) VALUES (?, "Withdraw", ?, ?)',
+    const result = await pool.query(
+      'INSERT INTO transaction (amount, transactiontype, accountid, atmid) VALUES ($1, \'Withdraw\', $2, $3) RETURNING transactionid',
       [amount, accountId, atmId]
     );
     
     res.json({ 
       success: true, 
-      transactionId: result.insertId,
+      transactionId: result.rows[0].transactionid,
       message: 'Withdrawal successful' 
     });
   } catch (error) {
@@ -397,21 +397,21 @@ app.post('/api/customer/transfer', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Cannot transfer to same account' });
     }
     
-    const [fromAccounts] = await pool.query(
-      'SELECT * FROM bank_account WHERE AccountID = ? AND CustomerID = ?',
+    const fromAccountsResult = await pool.query(
+      'SELECT * FROM bank_account WHERE AccountID = $1 AND CustomerID = $2',
       [fromAccountId, req.user.id]
     );
     
-    if (fromAccounts.length === 0) {
+    if (fromAccountsResult.rows.length === 0) {
       return res.status(404).json({ error: 'Source account not found' });
     }
     
-    const [toAccounts] = await pool.query(
-      'SELECT * FROM bank_account WHERE AccountID = ?',
+    const toAccountsResult = await pool.query(
+      'SELECT * FROM bank_account WHERE AccountID = $1',
       [toAccountId]
     );
     
-    if (toAccounts.length === 0) {
+    if (toAccountsResult.rows.length === 0) {
       return res.status(404).json({ error: 'Destination account not found' });
     }
     
@@ -419,34 +419,34 @@ app.post('/api/customer/transfer', authenticateToken, async (req, res) => {
     const accountDetails = await getAccountType(fromAccountId);
     
     let allowedOverdraft = 0;
-    if (accountDetails?.type === 'Checking' && accountDetails.OverdraftLimit) {
-      allowedOverdraft = parseFloat(accountDetails.OverdraftLimit);
+    if (accountDetails?.type === 'Checking' && accountDetails.overdraftlimit) {
+      allowedOverdraft = parseFloat(accountDetails.overdraftlimit);
     }
     
     if (balance + allowedOverdraft < amount) {
       return res.status(400).json({ error: 'Insufficient funds' });
     }
     
-    const connection = await pool.getConnection();
+    const client = await pool.connect();
     try {
-      await connection.beginTransaction();
+      await client.query('BEGIN');
       
-      await connection.query(
-        'INSERT INTO transaction (Amount, TransactionType, AccountID, RelatedAccountID, ATMID) VALUES (?, "Withdraw", ?, ?, 1)',
+      await client.query(
+        'INSERT INTO transaction (amount, transactiontype, accountid, relatedaccountid, atmid) VALUES ($1, \'Withdraw\', $2, $3, 1)',
         [amount, fromAccountId, toAccountId]
       );
       
-      await connection.query(
-        'INSERT INTO transaction (Amount, TransactionType, AccountID, RelatedAccountID, ATMID) VALUES (?, "Deposit", ?, ?, 1)',
+      await client.query(
+        'INSERT INTO transaction (amount, transactiontype, accountid, relatedaccountid, atmid) VALUES ($1, \'Deposit\', $2, $3, 1)',
         [amount, toAccountId, fromAccountId]
       );
       
-      await connection.commit();
+      await client.query('COMMIT');
     } catch (error) {
-      await connection.rollback();
+      await client.query('ROLLBACK');
       throw error;
     } finally {
-      connection.release();
+      client.release();
     }
     
     res.json({ 
@@ -465,12 +465,12 @@ app.get('/api/customer/loans', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Customer access required' });
     }
     
-    const [loans] = await pool.query(
-      'SELECT * FROM loan_application WHERE CustomerID = ? ORDER BY AppDate DESC',
+    const result = await pool.query(
+      'SELECT * FROM loan_application WHERE CustomerID = $1 ORDER BY appdate DESC',
       [req.user.id]
     );
     
-    res.json(loans);
+    res.json(result.rows);
   } catch (error) {
     console.error('Get loans error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -489,14 +489,14 @@ app.post('/api/customer/loans', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Invalid amount' });
     }
     
-    const [result] = await pool.query(
-      'INSERT INTO loan_application (AppDate, CustomerID) VALUES (NOW(), ?)',
+    const result = await pool.query(
+      'INSERT INTO loan_application (appdate, customerid) VALUES (CURRENT_DATE, $1) RETURNING applicationid',
       [req.user.id]
     );
     
     res.json({ 
       success: true, 
-      applicationId: result.insertId,
+      applicationId: result.rows[0].applicationid,
       message: 'Loan application submitted' 
     });
   } catch (error) {
@@ -507,14 +507,14 @@ app.post('/api/customer/loans', authenticateToken, async (req, res) => {
 
 app.get('/api/admin/customers', authenticateToken, isEmployee, async (req, res) => {
   try {
-    const [customers] = await pool.query('SELECT * FROM customer');
+    const result = await pool.query('SELECT * FROM customer');
     
-    const customersWithPhones = await Promise.all(customers.map(async (customer) => {
-      const [phones] = await pool.query(
-        'SELECT Phone FROM customer_phone WHERE CustomerID = ?',
-        [customer.CustomerID]
+    const customersWithPhones = await Promise.all(result.rows.map(async (customer) => {
+      const phonesResult = await pool.query(
+        'SELECT Phone FROM customer_phone WHERE CustomerID = $1',
+        [customer.customerid]
       );
-      return { ...customer, phones: phones.map(p => p.Phone) };
+      return { ...customer, phones: phonesResult.rows.map(p => p.phone) };
     }));
     
     res.json(customersWithPhones);
@@ -534,18 +534,18 @@ app.post('/api/admin/customers', authenticateToken, isEmployee, async (req, res)
     
     const hashedPassword = password ? await bcrypt.hash(password, 10) : await bcrypt.hash('0000', 10);
     
-    const [result] = await pool.query(
-      `INSERT INTO customer (NationalID, FirstName, LastName, Gender, Street, Area, State, DateOfBirth, Password) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    const result = await pool.query(
+      `INSERT INTO customer (nationalid, firstname, lastname, gender, street, area, state, dateofbirth, password) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING customerid`,
       [nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, hashedPassword]
     );
     
-    const customerId = result.insertId;
+    const customerId = result.rows[0].customerid;
     
     if (phones && phones.length > 0) {
       for (const phone of phones) {
         await pool.query(
-          'INSERT INTO customer_phone (CustomerID, Phone) VALUES (?, ?)',
+          'INSERT INTO customer_phone (customerid, phone) VALUES ($1, $2)',
           [customerId, phone]
         );
       }
@@ -558,7 +558,7 @@ app.post('/api/admin/customers', authenticateToken, isEmployee, async (req, res)
     });
   } catch (error) {
     console.error('Create customer error:', error);
-    if (error.code === 'ER_DUP_ENTRY') {
+    if (error.code === '23505') {
       return res.status(400).json({ error: 'National ID already exists' });
     }
     res.status(500).json({ error: 'Internal server error' });
@@ -571,20 +571,20 @@ app.put('/api/admin/customers/:id', authenticateToken, isEmployee, async (req, r
     const { nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, phones, password } = req.body;
     
     await pool.query(
-      `UPDATE customer SET NationalID = ?, FirstName = ?, LastName = ?, Gender = ?, Street = ?, Area = ?, State = ?, DateOfBirth = ? WHERE CustomerID = ?`,
+      `UPDATE customer SET nationalid = $1, firstname = $2, lastname = $3, gender = $4, street = $5, area = $6, state = $7, dateofbirth = $8 WHERE customerid = $9`,
       [nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, id]
     );
     
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
-      await pool.query('UPDATE customer SET Password = ? WHERE CustomerID = ?', [hashedPassword, id]);
+      await pool.query('UPDATE customer SET password = $1 WHERE customerid = $2', [hashedPassword, id]);
     }
     
     if (phones) {
-      await pool.query('DELETE FROM customer_phone WHERE CustomerID = ?', [id]);
+      await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [id]);
       for (const phone of phones) {
         await pool.query(
-          'INSERT INTO customer_phone (CustomerID, Phone) VALUES (?, ?)',
+          'INSERT INTO customer_phone (customerid, phone) VALUES ($1, $2)',
           [id, phone]
         );
       }
@@ -601,10 +601,10 @@ app.delete('/api/admin/customers/:id', authenticateToken, isEmployee, async (req
   try {
     const { id } = req.params;
     
-    await pool.query('DELETE FROM customer_phone WHERE CustomerID = ?', [id]);
-    await pool.query('DELETE FROM loan_application WHERE CustomerID = ?', [id]);
-    await pool.query('DELETE FROM bank_account WHERE CustomerID = ?', [id]);
-    await pool.query('DELETE FROM customer WHERE CustomerID = ?', [id]);
+    await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [id]);
+    await pool.query('DELETE FROM loan_application WHERE customerid = $1', [id]);
+    await pool.query('DELETE FROM bank_account WHERE customerid = $1', [id]);
+    await pool.query('DELETE FROM customer WHERE customerid = $1', [id]);
     
     res.json({ success: true, message: 'Customer deleted successfully' });
   } catch (error) {
@@ -615,22 +615,22 @@ app.delete('/api/admin/customers/:id', authenticateToken, isEmployee, async (req
 
 app.get('/api/admin/accounts', authenticateToken, isEmployee, async (req, res) => {
   try {
-    const [accounts] = await pool.query(
+    const result = await pool.query(
       `SELECT ba.*, 
-              CASE WHEN sa.AccountID IS NOT NULL THEN 'Savings' ELSE 'Checking' END as AccountTypeName
+              CASE WHEN sa.accountid IS NOT NULL THEN 'Savings' ELSE 'Checking' END as accounttypename
        FROM bank_account ba
-       LEFT JOIN savings_account sa ON ba.AccountID = sa.AccountID`
+       LEFT JOIN savings_account sa ON ba.accountid = sa.accountid`
     );
     
-    const accountsWithBalance = await Promise.all(accounts.map(async (account) => {
-      const balance = await calculateBalance(account.AccountID);
-      const customer = await pool.query('SELECT * FROM customer WHERE CustomerID = ?', [account.CustomerID]);
-      const branch = await pool.query('SELECT * FROM branch WHERE BranchID = ?', [account.BranchID]);
+    const accountsWithBalance = await Promise.all(result.rows.map(async (account) => {
+      const balance = await calculateBalance(account.accountid);
+      const customerResult = await pool.query('SELECT * FROM customer WHERE customerid = $1', [account.customerid]);
+      const branchResult = await pool.query('SELECT * FROM branch WHERE branchid = $1', [account.branchid]);
       return {
         ...account,
         balance,
-        customerName: customer[0]?.[0] ? `${customer[0][0].FirstName} ${customer[0][0].LastName}` : null,
-        branchName: branch[0]?.[0]?.BranchName,
+        customerName: customerResult.rows[0] ? `${customerResult.rows[0].firstname} ${customerResult.rows[0].lastname}` : null,
+        branchName: branchResult.rows[0]?.branchname,
       };
     }));
     
@@ -651,21 +651,21 @@ app.post('/api/admin/accounts', authenticateToken, isEmployee, async (req, res) 
     
     const accountNumber = `ACC-${Date.now()}`;
     
-    const [result] = await pool.query(
-      'INSERT INTO bank_account (AccountNumber, OpenDate, AccountType, CustomerID, BranchID) VALUES (?, NOW(), ?, ?, ?)',
+    const result = await pool.query(
+      'INSERT INTO bank_account (accountnumber, opendate, accounttype, customerid, branchid) VALUES ($1, CURRENT_DATE, $2, $3, $4) RETURNING accountid',
       [accountNumber, accountType, customerId, branchId]
     );
     
-    const accountId = result.insertId;
+    const accountId = result.rows[0].accountid;
     
     if (accountType === 'Savings') {
       await pool.query(
-        'INSERT INTO savings_account (AccountID, InterestRate) VALUES (?, ?)',
+        'INSERT INTO savings_account (accountid, interestrate) VALUES ($1, $2)',
         [accountId, interestRate || 5.0]
       );
     } else {
       await pool.query(
-        'INSERT INTO checking_account (AccountID, OverdraftLimit) VALUES (?, ?)',
+        'INSERT INTO checking_account (accountid, overdraftlimit) VALUES ($1, $2)',
         [accountId, overdraftLimit || 1000]
       );
     }
@@ -685,10 +685,10 @@ app.delete('/api/admin/accounts/:id', authenticateToken, isEmployee, async (req,
   try {
     const { id } = req.params;
     
-    await pool.query('DELETE FROM transaction WHERE AccountID = ?', [id]);
-    await pool.query('DELETE FROM savings_account WHERE AccountID = ?', [id]);
-    await pool.query('DELETE FROM checking_account WHERE AccountID = ?', [id]);
-    await pool.query('DELETE FROM bank_account WHERE AccountID = ?', [id]);
+    await pool.query('DELETE FROM transaction WHERE accountid = $1', [id]);
+    await pool.query('DELETE FROM savings_account WHERE accountid = $1', [id]);
+    await pool.query('DELETE FROM checking_account WHERE accountid = $1', [id]);
+    await pool.query('DELETE FROM bank_account WHERE accountid = $1', [id]);
     
     res.json({ success: true, message: 'Account deleted successfully' });
   } catch (error) {
@@ -699,15 +699,15 @@ app.delete('/api/admin/accounts/:id', authenticateToken, isEmployee, async (req,
 
 app.get('/api/admin/employees', authenticateToken, isEmployee, async (req, res) => {
   try {
-    const [employees] = await pool.query('SELECT * FROM employee');
+    const result = await pool.query('SELECT * FROM employee');
     
-    const employeesWithRole = await Promise.all(employees.map(async (employee) => {
-      const role = await getEmployeeRole(employee.EmployeeID);
-      const department = await pool.query('SELECT * FROM department WHERE DepartmentID = ?', [employee.DepartmentID]);
+    const employeesWithRole = await Promise.all(result.rows.map(async (employee) => {
+      const role = await getEmployeeRole(employee.employeeid);
+      const departmentResult = await pool.query('SELECT * FROM department WHERE departmentid = $1', [employee.departmentid]);
       return {
         ...employee,
         ...role,
-        departmentName: department[0]?.[0]?.DepartmentName,
+        departmentName: departmentResult.rows[0]?.departmentname,
       };
     }));
     
@@ -728,26 +728,26 @@ app.post('/api/admin/employees', authenticateToken, isEmployee, async (req, res)
     
     const hashedPassword = password ? await bcrypt.hash(password, 10) : await bcrypt.hash('0000', 10);
     
-    const [result] = await pool.query(
-      'INSERT INTO employee (FirstName, LastName, Gender, Salary, Email, Password, DepartmentID) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    const result = await pool.query(
+      'INSERT INTO employee (firstname, lastname, gender, salary, email, password, departmentid) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING employeeid',
       [firstName, lastName, gender, salary, email, hashedPassword, departmentId]
     );
     
-    const employeeId = result.insertId;
+    const employeeId = result.rows[0].employeeid;
     
     if (roleType === 'Manager') {
       await pool.query(
-        'INSERT INTO manager_details (EmployeeID, JobTitle) VALUES (?, ?)',
+        'INSERT INTO manager_details (employeeid, jobtitle) VALUES ($1, $2)',
         [employeeId, jobTitle || 'Manager']
       );
     } else if (roleType === 'Teller') {
       await pool.query(
-        'INSERT INTO teller_details (EmployeeID, BranchLocation, TellerID) VALUES (?, ?, ?)',
+        'INSERT INTO teller_details (employeeid, branchlocation, tellerid) VALUES ($1, $2, $3)',
         [employeeId, branchLocation, tellerId]
       );
     } else if (roleType === 'Clerk') {
       await pool.query(
-        'INSERT INTO clerk_details (EmployeeID, ClerkLevel) VALUES (?, ?)',
+        'INSERT INTO clerk_details (employeeid, clerklevel) VALUES ($1, $2)',
         [employeeId, clerkLevel || 'Clerk']
       );
     }
@@ -769,32 +769,32 @@ app.put('/api/admin/employees/:id', authenticateToken, isEmployee, async (req, r
     const { firstName, lastName, gender, salary, email, departmentId, roleType, jobTitle, tellerId, branchLocation, clerkLevel, password } = req.body;
     
     await pool.query(
-      'UPDATE employee SET FirstName = ?, LastName = ?, Gender = ?, Salary = ?, Email = ?, DepartmentID = ? WHERE EmployeeID = ?',
+      'UPDATE employee SET firstname = $1, lastname = $2, gender = $3, salary = $4, email = $5, departmentid = $6 WHERE employeeid = $7',
       [firstName, lastName, gender, salary, email, departmentId, id]
     );
     
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
-      await pool.query('UPDATE employee SET Password = ? WHERE EmployeeID = ?', [hashedPassword, id]);
+      await pool.query('UPDATE employee SET password = $1 WHERE employeeid = $2', [hashedPassword, id]);
     }
     
-    await pool.query('DELETE FROM manager_details WHERE EmployeeID = ?', [id]);
-    await pool.query('DELETE FROM teller_details WHERE EmployeeID = ?', [id]);
-    await pool.query('DELETE FROM clerk_details WHERE EmployeeID = ?', [id]);
+    await pool.query('DELETE FROM manager_details WHERE employeeid = $1', [id]);
+    await pool.query('DELETE FROM teller_details WHERE employeeid = $1', [id]);
+    await pool.query('DELETE FROM clerk_details WHERE employeeid = $1', [id]);
     
     if (roleType === 'Manager') {
       await pool.query(
-        'INSERT INTO manager_details (EmployeeID, JobTitle) VALUES (?, ?)',
+        'INSERT INTO manager_details (employeeid, jobtitle) VALUES ($1, $2)',
         [id, jobTitle || 'Manager']
       );
     } else if (roleType === 'Teller') {
       await pool.query(
-        'INSERT INTO teller_details (EmployeeID, BranchLocation, TellerID) VALUES (?, ?, ?)',
+        'INSERT INTO teller_details (employeeid, branchlocation, tellerid) VALUES ($1, $2, $3)',
         [id, branchLocation, tellerId]
       );
     } else if (roleType === 'Clerk') {
       await pool.query(
-        'INSERT INTO clerk_details (EmployeeID, ClerkLevel) VALUES (?, ?)',
+        'INSERT INTO clerk_details (employeeid, clerklevel) VALUES ($1, $2)',
         [id, clerkLevel || 'Clerk']
       );
     }
@@ -810,10 +810,10 @@ app.delete('/api/admin/employees/:id', authenticateToken, isEmployee, async (req
   try {
     const { id } = req.params;
     
-    await pool.query('DELETE FROM manager_details WHERE EmployeeID = ?', [id]);
-    await pool.query('DELETE FROM teller_details WHERE EmployeeID = ?', [id]);
-    await pool.query('DELETE FROM clerk_details WHERE EmployeeID = ?', [id]);
-    await pool.query('DELETE FROM employee WHERE EmployeeID = ?', [id]);
+    await pool.query('DELETE FROM manager_details WHERE employeeid = $1', [id]);
+    await pool.query('DELETE FROM teller_details WHERE employeeid = $1', [id]);
+    await pool.query('DELETE FROM clerk_details WHERE employeeid = $1', [id]);
+    await pool.query('DELETE FROM employee WHERE employeeid = $1', [id]);
     
     res.json({ success: true, message: 'Employee deleted successfully' });
   } catch (error) {
@@ -824,8 +824,8 @@ app.delete('/api/admin/employees/:id', authenticateToken, isEmployee, async (req
 
 app.get('/api/admin/branches', authenticateToken, isEmployee, async (req, res) => {
   try {
-    const [branches] = await pool.query('SELECT * FROM branch');
-    res.json(branches);
+    const result = await pool.query('SELECT * FROM branch');
+    res.json(result.rows);
   } catch (error) {
     console.error('Get branches error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -840,14 +840,14 @@ app.post('/api/admin/branches', authenticateToken, isEmployee, async (req, res) 
       return res.status(400).json({ error: 'Branch name required' });
     }
     
-    const [result] = await pool.query(
-      'INSERT INTO branch (BranchName, Location, Email, EstablishedYear) VALUES (?, ?, ?, ?)',
+    const result = await pool.query(
+      'INSERT INTO branch (branchname, location, email, establishedyear) VALUES ($1, $2, $3, $4) RETURNING branchid',
       [branchName, location, email, establishedYear]
     );
     
     res.json({ 
       success: true, 
-      branchId: result.insertId,
+      branchId: result.rows[0].branchid,
       message: 'Branch created successfully' 
     });
   } catch (error) {
@@ -862,7 +862,7 @@ app.put('/api/admin/branches/:id', authenticateToken, isEmployee, async (req, re
     const { branchName, location, email, establishedYear } = req.body;
     
     await pool.query(
-      'UPDATE branch SET BranchName = ?, Location = ?, Email = ?, EstablishedYear = ? WHERE BranchID = ?',
+      'UPDATE branch SET branchname = $1, location = $2, email = $3, establishedyear = $4 WHERE branchid = $5',
       [branchName, location, email, establishedYear, id]
     );
     
@@ -877,7 +877,7 @@ app.delete('/api/admin/branches/:id', authenticateToken, isEmployee, async (req,
   try {
     const { id } = req.params;
     
-    await pool.query('DELETE FROM branch WHERE BranchID = ?', [id]);
+    await pool.query('DELETE FROM branch WHERE branchid = $1', [id]);
     res.json({ success: true, message: 'Branch deleted successfully' });
   } catch (error) {
     console.error('Delete branch error:', error);
@@ -887,13 +887,13 @@ app.delete('/api/admin/branches/:id', authenticateToken, isEmployee, async (req,
 
 app.get('/api/admin/departments', authenticateToken, isEmployee, async (req, res) => {
   try {
-    const [departments] = await pool.query('SELECT * FROM department');
+    const result = await pool.query('SELECT * FROM department');
     
-    const departmentsWithBranch = await Promise.all(departments.map(async (dept) => {
-      const branch = await pool.query('SELECT * FROM branch WHERE BranchID = ?', [dept.BranchID]);
+    const departmentsWithBranch = await Promise.all(result.rows.map(async (dept) => {
+      const branchResult = await pool.query('SELECT * FROM branch WHERE branchid = $1', [dept.branchid]);
       return {
         ...dept,
-        branchName: branch[0]?.[0]?.BranchName,
+        branchName: branchResult.rows[0]?.branchname,
       };
     }));
     
@@ -912,14 +912,14 @@ app.post('/api/admin/departments', authenticateToken, isEmployee, async (req, re
       return res.status(400).json({ error: 'Department name required' });
     }
     
-    const [result] = await pool.query(
-      'INSERT INTO department (DepartmentName, BranchID) VALUES (?, ?)',
+    const result = await pool.query(
+      'INSERT INTO department (departmentname, branchid) VALUES ($1, $2) RETURNING departmentid',
       [departmentName, branchId]
     );
     
     res.json({ 
       success: true, 
-      departmentId: result.insertId,
+      departmentId: result.rows[0].departmentid,
       message: 'Department created successfully' 
     });
   } catch (error) {
@@ -934,7 +934,7 @@ app.put('/api/admin/departments/:id', authenticateToken, isEmployee, async (req,
     const { departmentName, branchId } = req.body;
     
     await pool.query(
-      'UPDATE department SET DepartmentName = ?, BranchID = ? WHERE DepartmentID = ?',
+      'UPDATE department SET departmentname = $1, branchid = $2 WHERE departmentid = $3',
       [departmentName, branchId, id]
     );
     
@@ -949,7 +949,7 @@ app.delete('/api/admin/departments/:id', authenticateToken, isEmployee, async (r
   try {
     const { id } = req.params;
     
-    await pool.query('DELETE FROM department WHERE DepartmentID = ?', [id]);
+    await pool.query('DELETE FROM department WHERE departmentid = $1', [id]);
     res.json({ success: true, message: 'Department deleted successfully' });
   } catch (error) {
     console.error('Delete department error:', error);
@@ -959,13 +959,13 @@ app.delete('/api/admin/departments/:id', authenticateToken, isEmployee, async (r
 
 app.get('/api/admin/atms', authenticateToken, isEmployee, async (req, res) => {
   try {
-    const [atms] = await pool.query('SELECT * FROM atm');
+    const result = await pool.query('SELECT * FROM atm');
     
-    const atmsWithBranch = await Promise.all(atms.map(async (atm) => {
-      const branch = await pool.query('SELECT * FROM branch WHERE BranchID = ?', [atm.BranchID]);
+    const atmsWithBranch = await Promise.all(result.rows.map(async (atm) => {
+      const branchResult = await pool.query('SELECT * FROM branch WHERE branchid = $1', [atm.branchid]);
       return {
         ...atm,
-        branchName: branch[0]?.[0]?.BranchName,
+        branchName: branchResult.rows[0]?.branchname,
       };
     }));
     
@@ -984,14 +984,14 @@ app.post('/api/admin/atms', authenticateToken, isEmployee, async (req, res) => {
       return res.status(400).json({ error: 'Location required' });
     }
     
-    const [result] = await pool.query(
-      'INSERT INTO atm (Location, InstallDate, Status, BranchID) VALUES (?, NOW(), ?, ?)',
+    const result = await pool.query(
+      'INSERT INTO atm (location, installdate, status, branchid) VALUES ($1, CURRENT_DATE, $2, $3) RETURNING atmid',
       [location, status || 'Active', branchId]
     );
     
     res.json({ 
       success: true, 
-      atmId: result.insertId,
+      atmId: result.rows[0].atmid,
       message: 'ATM created successfully' 
     });
   } catch (error) {
@@ -1006,7 +1006,7 @@ app.put('/api/admin/atms/:id', authenticateToken, isEmployee, async (req, res) =
     const { location, branchId, status } = req.body;
     
     await pool.query(
-      'UPDATE atm SET Location = ?, BranchID = ?, Status = ? WHERE ATMID = ?',
+      'UPDATE atm SET location = $1, branchid = $2, status = $3 WHERE atmid = $4',
       [location, branchId, status, id]
     );
     
@@ -1021,7 +1021,7 @@ app.delete('/api/admin/atms/:id', authenticateToken, isEmployee, async (req, res
   try {
     const { id } = req.params;
     
-    await pool.query('DELETE FROM atm WHERE ATMID = ?', [id]);
+    await pool.query('DELETE FROM atm WHERE atmid = $1', [id]);
     res.json({ success: true, message: 'ATM deleted successfully' });
   } catch (error) {
     console.error('Delete ATM error:', error);
@@ -1031,10 +1031,10 @@ app.delete('/api/admin/atms/:id', authenticateToken, isEmployee, async (req, res
 
 app.get('/api/admin/transactions', authenticateToken, isEmployee, async (req, res) => {
   try {
-    const [transactions] = await pool.query(
-      'SELECT t.*, ba.AccountNumber, a.Location as ATMLocation FROM transaction t LEFT JOIN bank_account ba ON t.AccountID = ba.AccountID LEFT JOIN atm a ON t.ATMID = a.ATMID ORDER BY t.Date_Time DESC'
+    const result = await pool.query(
+      'SELECT t.*, ba.accountnumber, a.location as atmlocation FROM transaction t LEFT JOIN bank_account ba ON t.accountid = ba.accountid LEFT JOIN atm a ON t.atmid = a.atmid ORDER BY t.date_time DESC'
     );
-    res.json(transactions);
+    res.json(result.rows);
   } catch (error) {
     console.error('Get transactions error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -1043,10 +1043,10 @@ app.get('/api/admin/transactions', authenticateToken, isEmployee, async (req, re
 
 app.get('/api/admin/loans', authenticateToken, isEmployee, async (req, res) => {
   try {
-    const [loans] = await pool.query(
-      'SELECT la.*, c.FirstName, c.LastName FROM loan_application la LEFT JOIN customer c ON la.CustomerID = c.CustomerID ORDER BY la.AppDate DESC'
+    const result = await pool.query(
+      'SELECT la.*, c.firstname, c.lastname FROM loan_application la LEFT JOIN customer c ON la.customerid = c.customerid ORDER BY la.appdate DESC'
     );
-    res.json(loans);
+    res.json(result.rows);
   } catch (error) {
     console.error('Get loans error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -1056,11 +1056,11 @@ app.get('/api/admin/loans', authenticateToken, isEmployee, async (req, res) => {
 app.put('/api/admin/loans/:id', authenticateToken, isEmployee, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, approvedAmt, startDate, endDate } = req.body;
+    const { status, approvedamt, startdate, enddate } = req.body;
     
     await pool.query(
-      'UPDATE loan_application SET Status = ?, ApprovedAmt = ?, StartDate = ?, EndDate = ? WHERE ApplicationID = ?',
-      [status, approvedAmt, startDate, endDate, id]
+      'UPDATE loan_application SET status = $1, approvedamt = $2, startdate = $3, enddate = $4 WHERE applicationid = $5',
+      [status, approvedamt, startdate, enddate, id]
     );
     
     res.json({ success: true, message: 'Loan updated successfully' });
