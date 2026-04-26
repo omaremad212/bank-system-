@@ -11,11 +11,11 @@ const ManagerCustomers = () => {
     lastName: '',
     nationalId: '',
     gender: '',
+    dateOfBirth: '',
     street: '',
     area: '',
     state: '',
-    dateOfBirth: '',
-    phones: [''],
+    phone: '',
   });
 
   const fetchCustomers = async () => {
@@ -71,11 +71,11 @@ const ManagerCustomers = () => {
       lastName: customer.LastName,
       nationalId: customer.NationalID,
       gender: customer.Gender,
+      dateOfBirth: customer.DateOfBirth || '',
       street: customer.Street || '',
       area: customer.Area || '',
       state: customer.State || '',
-      dateOfBirth: customer.DateOfBirth || '',
-      phones: customer.phones || [''],
+      phone: customer.phones?.[0] || '',
     });
     setShowModal(true);
   };
@@ -115,11 +115,11 @@ const ManagerCustomers = () => {
               lastName: '',
               nationalId: '',
               gender: '',
+              dateOfBirth: '',
               street: '',
               area: '',
               state: '',
-              dateOfBirth: '',
-              phones: [''],
+              phone: '',
             });
             setShowModal(true);
           }}
@@ -231,8 +231,8 @@ const ManagerCustomers = () => {
                     <input
                       type="text"
                       className="form-input"
-                      value={formData.phones[0]}
-                      onChange={e => setFormData({ ...formData, phones: [e.target.value] })}
+                      value={formData.phone}
+                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
                     />
                   </div>
                 </div>

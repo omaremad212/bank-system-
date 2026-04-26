@@ -141,29 +141,36 @@ export default async function handler(request, response) {
 
     if (method === 'POST' && action === 'customers') {
       console.log('POST customers received:', request.body);
-      const { nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, phones } = request.body;
+      const { nationalId, firstName, lastName, gender, dateOfBirth, street, area, state, phone } = request.body;
       
+      // Validation
       if (!nationalId || !firstName || !lastName) {
-        console.log('Missing required fields');
-        return response.status(400).json({ message: 'Required fields missing' });
+        return response.status(400).json({ message: 'First name, last name, and National ID are required' });
       }
       
+      if (!gender) {
+        return response.status(400).json({ message: 'Gender is required' });
+      }
+      
+      // Check duplicate
       const existing = await pool.query('SELECT customerid FROM customer WHERE nationalid = $1', [nationalId]);
       if (existing.rows.length > 0) {
         return response.status(400).json({ message: 'National ID already exists' });
       }
 
+      // Insert customer
       const result = await pool.query(
-        `INSERT INTO customer (nationalid, firstname, lastname, gender, street, area, state, dateofbirth)
+        `INSERT INTO customer (nationalid, firstname, lastname, gender, dateofbirth, street, area, state)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING customerid`,
-        [nationalId, firstName, lastName, gender, street, area, state, dateOfBirth]
+        [nationalId, firstName, lastName, gender, dateOfBirth || null, street || null, area || null, state || null]
       );
 
       const customerId = result.rows[0].customerid;
       console.log('Customer created with ID:', customerId);
       
-      if (phones && phones[0]) {
-        await pool.query('INSERT INTO customer_phone (customerid, phone) VALUES ($1, $2)', [customerId, phones[0]]);
+      // Insert phone if provided
+      if (phone) {
+        await pool.query('INSERT INTO customer_phone (customerid, phone) VALUES ($1, $2)', [customerId, phone]);
       }
 
       return response.status(201).json({ message: 'Customer created', customerId });
@@ -171,17 +178,19 @@ export default async function handler(request, response) {
 
     if (method === 'PUT' && action === 'customers') {
       const id = request.query.id || request.query.id;
-      const { firstName, lastName, gender, street, area, state, dateOfBirth, phones } = request.body;
+      const { firstName, lastName, gender, dateOfBirth, street, area, state, phone } = request.body;
 
       await pool.query(
-        `UPDATE customer SET firstname = $1, lastname = $2, gender = $3, street = $4, area = $5, state = $6, dateofbirth = $7
+        `UPDATE customer SET firstname = $1, lastname = $2, gender = $3, dateofbirth = $4, street = $5, area = $6, state = $7
          WHERE customerid = $8`,
-        [firstName, lastName, gender, street, area, state, dateOfBirth, id]
+        [firstName, lastName, gender, dateOfBirth || null, street || null, area || null, state || null, id]
       );
 
-      if (phones && phones[0]) {
+      // Update phone
+      if (phone) {
+        // Delete existing phones and insert new one
         await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [id]);
-        await pool.query('INSERT INTO customer_phone (customerid, phone) VALUES ($1, $2)', [id, phones[0]]);
+        await pool.query('INSERT INTO customer_phone (customerid, phone) VALUES ($1, $2)', [id, phone]);
       }
 
       return response.status(200).json({ message: 'Customer updated' });
@@ -189,6 +198,7 @@ export default async function handler(request, response) {
 
     if (method === 'DELETE' && action === 'customers') {
       const id = request.query.id || request.query.id;
+      await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [id]);
       await pool.query('DELETE FROM customer WHERE customerid = $1', [id]);
       return response.status(200).json({ message: 'Customer deleted' });
     }
