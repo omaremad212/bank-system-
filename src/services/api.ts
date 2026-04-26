@@ -1,20 +1,10 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 const API_BASE = '/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
-const handleApiError = (error: unknown) => {
-  if (AxiosError.isAxiosError(error)) {
-    const response = error.response;
-    if (response) {
-      throw new Error(response.data?.error || `Server error: ${response.status}`);
-    }
-  }
-  throw new Error('Network error. Please check your connection.');
 };
 
 export const login = {
@@ -27,8 +17,11 @@ export const login = {
         headers: { 'Content-Type': 'application/json' }
       });
       return response.data;
-    } catch (error) {
-      handleApiError(error);
+    } catch (error: any) {
+      if (error.response) {
+        throw new Error(error.response.data?.error || `Error: ${error.response.status}`);
+      }
+      throw new Error('Network error. Please check your connection.');
     }
   },
   
@@ -41,8 +34,11 @@ export const login = {
         headers: { 'Content-Type': 'application/json' }
       });
       return response.data;
-    } catch (error) {
-      handleApiError(error);
+    } catch (error: any) {
+      if (error.response) {
+        throw new Error(error.response.data?.error || `Error: ${error.response.status}`);
+      }
+      throw new Error('Network error. Please check your connection.');
     }
   },
 };
