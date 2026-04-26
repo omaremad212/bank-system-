@@ -6,26 +6,15 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// Debug: log safe DB connection details (no password)
-if (process.env.DATABASE_URL) {
-  const dbUrl = new URL(process.env.DATABASE_URL);
-  console.log('DB Connection:', {
-    host: dbUrl.hostname,
-    user: dbUrl.username,
-    port: dbUrl.port,
-    database: dbUrl.pathname.replace('/', '')
-  });
-}
-
 const getEmployeeRole = async (employeeId) => {
   try {
-    const manager = await pool.query('SELECT * FROM manager_details WHERE "EmployeeID" = $1', [employeeId]);
+    const manager = await pool.query('SELECT * FROM manager_details WHERE employeeid = $1', [employeeId]);
     if (manager.rows.length > 0) return { roleType: 'Manager', ...manager.rows[0] };
     
-    const teller = await pool.query('SELECT * FROM teller_details WHERE "EmployeeID" = $1', [employeeId]);
+    const teller = await pool.query('SELECT * FROM teller_details WHERE employeeid = $1', [employeeId]);
     if (teller.rows.length > 0) return { roleType: 'Teller', ...teller.rows[0] };
     
-    const clerk = await pool.query('SELECT * FROM clerk_details WHERE "EmployeeID" = $1', [employeeId]);
+    const clerk = await pool.query('SELECT * FROM clerk_details WHERE employeeid = $1', [employeeId]);
     if (clerk.rows.length > 0) return { roleType: 'Clerk', ...clerk.rows[0] };
     
     return { roleType: 'Employee' };
@@ -53,7 +42,7 @@ export default async function handler(request, response) {
     console.log('Employee login attempt:', { employeeId: empId });
     
     const result = await pool.query(
-      'SELECT * FROM employee WHERE "EmployeeID" = $1',
+      'SELECT * FROM employee WHERE employeeid = $1',
       [empId]
     );
     
@@ -63,19 +52,18 @@ export default async function handler(request, response) {
     
     const employee = result.rows[0];
     
-    // Accept plain text "0000" or bcrypt-hashed "0000"
     let passwordValid = false;
-    if (employee.Password) {
-      if (employee.Password.startsWith('$2')) {
+    if (employee.password) {
+      if (employee.password.startsWith('$2')) {
         try {
           const bcrypt = await import('bcryptjs');
-          passwordValid = await bcrypt.compare(password, employee.Password);
+          passwordValid = await bcrypt.compare(password, employee.password);
         } catch (e) {
           console.error('bcrypt compare error:', e);
           passwordValid = false;
         }
       } else {
-        passwordValid = employee.Password === password;
+        passwordValid = employee.password === password;
       }
     } else {
       passwordValid = password === '0000';
@@ -86,22 +74,22 @@ export default async function handler(request, response) {
     }
     
     const departmentsResult = await pool.query(
-      'SELECT * FROM department WHERE "DepartmentID" = $1',
-      [employee.DepartmentID]
+      'SELECT * FROM department WHERE departmentid = $1',
+      [employee.departmentid]
     );
     const department = departmentsResult.rows[0];
     
     const branchesResult = department ? await pool.query(
-      'SELECT * FROM branch WHERE "BranchID" = $1',
-      [department.BranchID]
+      'SELECT * FROM branch WHERE branchid = $1',
+      [department.branchid]
     ) : { rows: [] };
     const branch = branchesResult.rows[0];
     
-    const role = await getEmployeeRole(employee.EmployeeID);
+    const role = await getEmployeeRole(employee.employeeid);
     
     const jwt = await import('jsonwebtoken');
     const token = jwt.sign(
-      { id: employee.EmployeeID, type: 'employee' },
+      { id: employee.employeeid, type: 'employee' },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       { expiresIn: '24h' }
     );
@@ -109,18 +97,18 @@ export default async function handler(request, response) {
     return response.status(200).json({
       token,
       user: {
-        id: employee.EmployeeID,
+        id: employee.employeeid,
         type: 'employee',
-        name: `${employee.FirstName} ${employee.LastName}`,
-        firstName: employee.FirstName,
-        lastName: employee.LastName,
-        gender: employee.Gender,
-        salary: employee.Salary,
-        email: employee.Email,
-        departmentId: employee.DepartmentID,
-        departmentName: department?.DepartmentName,
-        branchId: branch?.BranchID,
-        branchName: branch?.BranchName,
+        name: `${employee.firstname} ${employee.lastname}`,
+        firstName: employee.firstname,
+        lastName: employee.lastname,
+        gender: employee.gender,
+        salary: employee.salary,
+        email: employee.email,
+        departmentId: employee.departmentid,
+        departmentName: department?.departmentname,
+        branchId: branch?.branchid,
+        branchName: branch?.branchname,
         ...role,
       }
     });

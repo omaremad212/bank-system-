@@ -21,13 +21,13 @@ const authenticateToken = async (req) => {
 
 const getEmployeeRole = async (employeeId) => {
   try {
-    const manager = await pool.query('SELECT * FROM manager_details WHERE "EmployeeID" = $1', [employeeId]);
+    const manager = await pool.query('SELECT * FROM manager_details WHERE employeeid = $1', [employeeId]);
     if (manager.rows.length > 0) return { roleType: 'Manager', ...manager.rows[0] };
     
-    const teller = await pool.query('SELECT * FROM teller_details WHERE "EmployeeID" = $1', [employeeId]);
+    const teller = await pool.query('SELECT * FROM teller_details WHERE employeeid = $1', [employeeId]);
     if (teller.rows.length > 0) return { roleType: 'Teller', ...teller.rows[0] };
     
-    const clerk = await pool.query('SELECT * FROM clerk_details WHERE "EmployeeID" = $1', [employeeId]);
+    const clerk = await pool.query('SELECT * FROM clerk_details WHERE employeeid = $1', [employeeId]);
     if (clerk.rows.length > 0) return { roleType: 'Clerk', ...clerk.rows[0] };
     
     return { roleType: 'Employee' };
@@ -48,12 +48,12 @@ export default async function handler(request, response) {
     const result = await pool.query('SELECT * FROM employee');
     
     const employeesWithRole = await Promise.all(result.rows.map(async (employee) => {
-      const role = await getEmployeeRole(employee.EmployeeID);
-      const departmentResult = await pool.query('SELECT * FROM department WHERE "DepartmentID" = $1', [employee.DepartmentID]);
+      const role = await getEmployeeRole(employee.employeeid);
+      const departmentResult = await pool.query('SELECT * FROM department WHERE departmentid = $1', [employee.departmentid]);
       return {
         ...employee,
         ...role,
-        departmentName: departmentResult.rows[0]?.DepartmentName,
+        departmentName: departmentResult.rows[0]?.departmentname,
       };
     }));
     

@@ -6,17 +6,6 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// Debug: log safe DB connection details (no password)
-if (process.env.DATABASE_URL) {
-  const dbUrl = new URL(process.env.DATABASE_URL);
-  console.log('DB Connection:', {
-    host: dbUrl.hostname,
-    user: dbUrl.username,
-    port: dbUrl.port,
-    database: dbUrl.pathname.replace('/', '')
-  });
-}
-
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
     return response.status(405).json({ message: 'Method not allowed' });
@@ -32,7 +21,7 @@ export default async function handler(request, response) {
     }
 
     const result = await pool.query(
-      'SELECT * FROM customer WHERE "NationalID" = $1',
+      'SELECT * FROM customer WHERE nationalid = $1',
       [nationalId]
     );
     
@@ -44,21 +33,19 @@ export default async function handler(request, response) {
     
     // Accept plain text "0000" or bcrypt-hashed "0000"
     let passwordValid = false;
-    if (customer.Password) {
-      // Check if it's bcrypt hash or plain text
-      if (customer.Password.startsWith('$2')) {
+    if (customer.password) {
+      if (customer.password.startsWith('$2')) {
         try {
           const bcrypt = await import('bcryptjs');
-          passwordValid = await bcrypt.compare(password, customer.Password);
+          passwordValid = await bcrypt.compare(password, customer.password);
         } catch (e) {
           console.error('bcrypt compare error:', e);
           passwordValid = false;
         }
       } else {
-        passwordValid = customer.Password === password;
+        passwordValid = customer.password === password;
       }
     } else {
-      // No password in DB, accept "0000"
       passwordValid = password === '0000';
     }
     
@@ -67,13 +54,13 @@ export default async function handler(request, response) {
     }
     
     const phonesResult = await pool.query(
-      'SELECT "Phone" FROM customer_phone WHERE "CustomerID" = $1',
-      [customer.CustomerID]
+      'SELECT phone FROM customer_phone WHERE customerid = $1',
+      [customer.customerid]
     );
     
     const jwt = await import('jsonwebtoken');
     const token = jwt.sign(
-      { id: customer.CustomerID, type: 'customer', nationalId: customer.NationalID },
+      { id: customer.customerid, type: 'customer', nationalId: customer.nationalid },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       { expiresIn: '24h' }
     );
@@ -81,18 +68,18 @@ export default async function handler(request, response) {
     return response.status(200).json({
       token,
       user: {
-        id: customer.CustomerID,
+        id: customer.customerid,
         type: 'customer',
-        name: `${customer.FirstName} ${customer.LastName}`,
-        nationalId: customer.NationalID,
-        firstName: customer.FirstName,
-        lastName: customer.LastName,
-        gender: customer.Gender,
-        street: customer.Street,
-        area: customer.Area,
-        state: customer.State,
-        dateOfBirth: customer.DateOfBirth,
-        phones: phonesResult.rows.map(p => p.Phone),
+        name: `${customer.firstname} ${customer.lastname}`,
+        nationalId: customer.nationalid,
+        firstName: customer.firstname,
+        lastName: customer.lastname,
+        gender: customer.gender,
+        street: customer.street,
+        area: customer.area,
+        state: customer.state,
+        dateOfBirth: customer.dateofbirth,
+        phones: phonesResult.rows.map(p => p.phone),
       }
     });
   } catch (error) {

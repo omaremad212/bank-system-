@@ -32,10 +32,10 @@ export default async function handler(request, response) {
     
     const customersWithPhones = await Promise.all(result.rows.map(async (customer) => {
       const phonesResult = await pool.query(
-        'SELECT "Phone" FROM customer_phone WHERE "CustomerID" = $1',
-        [customer.CustomerID]
+        'SELECT phone FROM customer_phone WHERE customerid = $1',
+        [customer.customerid]
       );
-      return { ...customer, phones: phonesResult.rows.map(p => p.Phone) };
+      return { ...customer, phones: phonesResult.rows.map(p => p.phone) };
     }));
     
     return response.status(200).json(customersWithPhones);
