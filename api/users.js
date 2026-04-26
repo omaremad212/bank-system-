@@ -21,7 +21,7 @@ const authenticateToken = (req) => {
 const calculateBalance = async (accountId) => {
   try {
     const result = await pool.query(
-      'SELECT COALESCE(SUM(CASE WHEN transactiontype = $1 THEN amount ELSE -amount END), 0) as balance FROM transaction WHERE accountid = $2',
+      'SELECT COALESCE(SUM(CASE WHEN transactiontype = $1 THEN amount ELSE -amount END), 0) as balance FROM transactions WHERE accountid = $2',
       ['Deposit', accountId]
     );
     return parseFloat(result.rows[0]?.balance || 0);
@@ -64,15 +64,15 @@ export default async function handler(request, response) {
             [customer.customerid]
           );
           return {
-            CustomerID: customer.customerid,
-            NationalID: customer.nationalid,
-            FirstName: customer.firstname,
-            LastName: customer.lastname,
-            Gender: customer.gender,
-            Street: customer.street,
-            Area: customer.area,
-            State: customer.state,
-            DateOfBirth: customer.dateofbirth,
+            customerid: customer.customerid,
+            nationalid: customer.nationalid,
+            firstname: customer.firstname,
+            lastname: customer.lastname,
+            gender: customer.gender,
+            street: customer.street,
+            area: customer.area,
+            state: customer.state,
+            dateofbirth: customer.dateofbirth,
             phones: phonesResult.rows.map(p => p.phone),
           };
         }));
@@ -99,15 +99,15 @@ export default async function handler(request, response) {
           const role = await getEmployeeRole(employee.employeeid);
           const departmentResult = await pool.query('SELECT departmentname FROM department WHERE departmentid = $1', [employee.departmentid]);
           return {
-            EmployeeID: employee.employeeid,
-            FirstName: employee.firstname,
-            LastName: employee.lastname,
-            Gender: employee.gender,
-            Salary: employee.salary,
-            Email: employee.email,
-            DepartmentID: employee.departmentid,
+            employeeid: employee.employeeid,
+            firstname: employee.firstname,
+            lastname: employee.lastname,
+            gender: employee.gender,
+            salary: employee.salary,
+            email: employee.email,
+            departmentid: employee.departmentid,
             ...role,
-            DepartmentName: departmentResult.rows[0]?.departmentname,
+            departmentname: departmentResult.rows[0]?.departmentname,
           };
         }));
         return response.status(200).json(employeesWithRole);
@@ -124,15 +124,15 @@ export default async function handler(request, response) {
           const customerResult = await pool.query('SELECT firstname, lastname FROM customer WHERE customerid = $1', [account.customerid]);
           const branchResult = await pool.query('SELECT branchname FROM branch WHERE branchid = $1', [account.branchid]);
           return {
-            AccountID: account.accountid,
-            AccountNumber: account.accountnumber,
-            AccountType: account.accounttype,
-            OpenDate: account.opendate,
-            CustomerID: account.customerid,
-            BranchID: account.branchid,
+            accountid: account.accountid,
+            accountnumber: account.accountnumber,
+            accounttype: account.accounttype,
+            opendate: account.opendate,
+            customerid: account.customerid,
+            branchid: account.branchid,
             balance,
-            customerName: customerResult.rows[0] ? `${customerResult.rows[0].firstname} ${customerResult.rows[0].lastname}` : null,
-            branchName: branchResult.rows[0]?.branchname,
+            customername: customerResult.rows[0] ? `${customerResult.rows[0].firstname} ${customerResult.rows[0].lastname}` : null,
+            branchname: branchResult.rows[0]?.branchname,
           };
         }));
         return response.status(200).json(accountsWithBalance);

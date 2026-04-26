@@ -44,11 +44,11 @@ export default async function handler(request, response) {
       if (action === 'branches' || !action) {
         const result = await pool.query('SELECT branchid, branchname, location, email, establishedyear FROM branch ORDER BY branchid');
         const branches = result.rows.map(row => ({
-          BranchID: row.branchid,
-          BranchName: row.branchname,
-          Location: row.location,
-          Email: row.email,
-          EstablishedYear: row.establishedyear,
+          branchid: row.branchid,
+          branchname: row.branchname,
+          location: row.location,
+          email: row.email,
+          establishedyear: row.establishedyear,
         }));
         return response.status(200).json(branches);
       }
@@ -56,40 +56,39 @@ export default async function handler(request, response) {
       if (action === 'departments') {
         const result = await pool.query('SELECT departmentid, departmentname, branchid FROM department ORDER BY departmentid');
         const departments = result.rows.map(row => ({
-          DepartmentID: row.departmentid,
-          DepartmentName: row.departmentname,
-          BranchID: row.branchid,
+          departmentid: row.departmentid,
+          departmentname: row.departmentname,
+          branchid: row.branchid,
         }));
         return response.status(200).json(departments);
       }
 
       if (action === 'transactions') {
         const result = await pool.query(
-          'SELECT t.transactionid, t.amount, t.date_time, t.transactiontype, t.accountid, t.relatedaccountid, t.atmid, ba.accountnumber FROM transaction t LEFT JOIN bank_account ba ON t.accountid = ba.accountid ORDER BY t.date_time DESC LIMIT 100'
+          'SELECT t.transactionid, t.amount, t.date_time, t.transactiontype, t.accountid, t.relatedaccountid, t.atmid, ba.accountnumber FROM transactions t LEFT JOIN bank_account ba ON t.accountid = ba.accountid ORDER BY t.date_time DESC LIMIT 100'
         );
         const transactions = result.rows.map(row => ({
-          TransactionID: row.transactionid,
-          Amount: row.amount,
-          Date_Time: row.date_time,
-          TransactionType: row.transactiontype,
-          AccountID: row.accountid,
-          RelatedAccountID: row.relatedaccountid,
-          ATMID: row.atmid,
-          AccountNumber: row.accountnumber,
+          transactionid: row.transactionid,
+          amount: row.amount,
+          date_time: row.date_time,
+          transactiontype: row.transactiontype,
+          accountid: row.accountid,
+          relatedaccountid: row.relatedaccountid,
+          atmid: row.atmid,
+          accountnumber: row.accountnumber,
         }));
         return response.status(200).json(transactions);
       }
 
       if (action === 'loans') {
-        const result = await pool.query('SELECT applicationid, appdate, startdate, enddate, approvedamt, status, customerid FROM loan_application ORDER BY appdate DESC');
+        const result = await pool.query('SELECT applicationid, appdate, startdate, enddate, approvedamt, customerid FROM loan_application ORDER BY appdate DESC');
         const loans = result.rows.map(row => ({
-          ApplicationID: row.applicationid,
-          AppDate: row.appdate,
-          StartDate: row.startdate,
-          EndDate: row.enddate,
-          ApprovedAmt: row.approvedamt,
-          Status: row.status,
-          CustomerID: row.customerid,
+          applicationid: row.applicationid,
+          appdate: row.appdate,
+          startdate: row.startdate,
+          enddate: row.enddate,
+          approvedamt: row.approvedamt,
+          customerid: row.customerid,
         }));
         return response.status(200).json(loans);
       }
@@ -97,11 +96,11 @@ export default async function handler(request, response) {
       if (action === 'atms') {
         const result = await pool.query('SELECT atmid, location, installdate, status, branchid FROM atm ORDER BY atmid');
         const atms = result.rows.map(row => ({
-          ATMID: row.atmid,
-          Location: row.location,
-          InstallDate: row.installdate,
-          Status: row.status,
-          BranchID: row.branchid,
+          atmid: row.atmid,
+          location: row.location,
+          installdate: row.installdate,
+          status: row.status,
+          branchid: row.branchid,
         }));
         return response.status(200).json(atms);
       }
@@ -129,7 +128,7 @@ export default async function handler(request, response) {
       if (action === 'transactions') {
         const { amount, transactionType, accountId, relatedAccountId, atmId } = request.body;
         const result = await pool.query(
-          `INSERT INTO transaction (amount, transactiontype, accountid, relatedaccountid, atmid, date_time)
+          `INSERT INTO transactions (amount, transactiontype, accountid, relatedaccountid, atmid, date_time)
            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) RETURNING transactionid`,
           [amount, transactionType, accountId, relatedAccountId, atmId]
         );
@@ -137,11 +136,11 @@ export default async function handler(request, response) {
       }
 
       if (action === 'loans') {
-        const { customerId, appDate, startDate, endDate, approvedAmt, status } = request.body;
+        const { customerId, appDate, startDate, endDate, approvedAmt } = request.body;
         const result = await pool.query(
-          `INSERT INTO loan_application (appdate, startdate, enddate, approvedamt, status, customerid)
-           VALUES ($1, $2, $3, $4, $5, $6) RETURNING applicationid`,
-          [appDate || new Date(), startDate, endDate, approvedAmt, status || 'Pending', customerId]
+          `INSERT INTO loan_application (appdate, startdate, enddate, approvedamt, customerid)
+           VALUES ($1, $2, $3, $4, $5) RETURNING applicationid`,
+          [appDate || new Date(), startDate, endDate, approvedAmt, customerId]
         );
         return response.status(201).json({ message: 'Loan created', applicationId: result.rows[0].applicationid });
       }
@@ -152,7 +151,7 @@ export default async function handler(request, response) {
           `INSERT INTO atm (location, status, branchid, installdate) VALUES ($1, $2, $3, CURRENT_DATE) RETURNING atmid`,
           [location, status || 'Active', branchId]
         );
-        return response.status(201).json({ message: 'ATM created', atmId: result.rows[0].atmid });
+        return response.status(201).json({ message: 'ATM created', atmid: result.rows[0].atmid });
       }
     }
 
@@ -179,10 +178,10 @@ export default async function handler(request, response) {
 
       if (action === 'loans') {
         const id = request.query.id || request.query.id;
-        const { status, approvedAmt } = request.body;
+        const { approvedAmt } = request.body;
         await pool.query(
-          `UPDATE loan_application SET status = $1, approvedamt = $2 WHERE applicationid = $3`,
-          [status, approvedAmt, id]
+          `UPDATE loan_application SET approvedamt = $1 WHERE applicationid = $2`,
+          [approvedAmt, id]
         );
         return response.status(200).json({ message: 'Loan updated' });
       }
@@ -213,7 +212,7 @@ export default async function handler(request, response) {
 
       if (action === 'transactions') {
         const id = request.query.id || request.query.id;
-        await pool.query('DELETE FROM transaction WHERE transactionid = $1', [id]);
+        await pool.query('DELETE FROM transactions WHERE transactionid = $1', [id]);
         return response.status(200).json({ message: 'Transaction deleted' });
       }
 

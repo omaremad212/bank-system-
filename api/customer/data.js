@@ -21,7 +21,7 @@ const authenticateToken = (req) => {
 const calculateBalance = async (accountId) => {
   try {
     const result = await pool.query(
-      'SELECT COALESCE(SUM(CASE WHEN transactiontype = $1 THEN amount ELSE -amount END), 0) as balance FROM transaction WHERE accountid = $2',
+      'SELECT COALESCE(SUM(CASE WHEN transactiontype = $1 THEN amount ELSE -amount END), 0) as balance FROM transactions WHERE accountid = $2',
       ['Deposit', accountId]
     );
     return parseFloat(result.rows[0]?.balance || 0);
@@ -58,25 +58,25 @@ export default async function handler(request, response) {
       const accountsWithBalance = await Promise.all(accountsResult.rows.map(async (account) => {
         const balance = await calculateBalance(account.accountid);
         return {
-          AccountID: account.accountid,
-          AccountNumber: account.accountnumber,
-          AccountType: account.accounttype,
-          OpenDate: account.opendate,
-          interestRate: account.interestrate,
-          overdraftLimit: account.overdraftlimit,
+          accountid: account.accountid,
+          accountnumber: account.accountnumber,
+          accounttype: account.accounttype,
+          opendate: account.opendate,
+          interestrate: account.interestrate,
+          overdraftlimit: account.overdraftlimit,
           balance,
         };
       }));
       return response.status(200).json({
-        CustomerID: customer.customerid,
-        NationalID: customer.nationalid,
-        FirstName: customer.firstname,
-        LastName: customer.lastname,
-        Gender: customer.gender,
-        Street: customer.street,
-        Area: customer.area,
-        State: customer.state,
-        DateOfBirth: customer.dateofbirth,
+        customerid: customer.customerid,
+        nationalid: customer.nationalid,
+        firstname: customer.firstname,
+        lastname: customer.lastname,
+        gender: customer.gender,
+        street: customer.street,
+        area: customer.area,
+        state: customer.state,
+        dateofbirth: customer.dateofbirth,
         phones: phonesResult.rows.map(p => p.phone),
         accounts: accountsWithBalance,
       });
@@ -95,12 +95,12 @@ export default async function handler(request, response) {
       const accountsWithBalance = await Promise.all(result.rows.map(async (account) => {
         const balance = await calculateBalance(account.accountid);
         return {
-          AccountID: account.accountid,
-          AccountNumber: account.accountnumber,
-          AccountType: account.accounttype,
-          OpenDate: account.opendate,
-          interestRate: account.interestrate,
-          overdraftLimit: account.overdraftlimit,
+          accountid: account.accountid,
+          accountnumber: account.accountnumber,
+          accounttype: account.accounttype,
+          opendate: account.opendate,
+          interestrate: account.interestrate,
+          overdraftlimit: account.overdraftlimit,
           balance,
         };
       }));
@@ -109,7 +109,7 @@ export default async function handler(request, response) {
 
     if (action === 'transactions') {
       const accountId = request.query.accountId || request.query.accountid;
-      let query = 'SELECT transactionid, amount, date_time, transactiontype, accountid, relatedaccountid, atmid FROM transaction WHERE accountid IN (SELECT accountid FROM bank_account WHERE customerid = $1)';
+      let query = 'SELECT transactionid, amount, date_time, transactiontype, accountid, relatedaccountid, atmid FROM transactions WHERE accountid IN (SELECT accountid FROM bank_account WHERE customerid = $1)';
       const params = [user.id];
       if (accountId) {
         query += ' AND accountid = $2';
@@ -118,30 +118,29 @@ export default async function handler(request, response) {
       query += ' ORDER BY date_time DESC LIMIT 50';
       const result = await pool.query(query, params);
       const transactions = result.rows.map(row => ({
-        TransactionID: row.transactionid,
-        Amount: row.amount,
-        Date_Time: row.date_time,
-        TransactionType: row.transactiontype,
-        AccountID: row.accountid,
-        RelatedAccountID: row.relatedaccountid,
-        ATMID: row.atmid,
+        transactionid: row.transactionid,
+        amount: row.amount,
+        date_time: row.date_time,
+        transactiontype: row.transactiontype,
+        accountid: row.accountid,
+        relatedaccountid: row.relatedaccountid,
+        atmid: row.atmid,
       }));
       return response.status(200).json(transactions);
     }
 
     if (action === 'loans') {
       const result = await pool.query(
-        'SELECT applicationid, appdate, startdate, enddate, approvedamt, status, customerid FROM loan_application WHERE customerid = $1 ORDER BY appdate DESC',
+        'SELECT applicationid, appdate, startdate, enddate, approvedamt, customerid FROM loan_application WHERE customerid = $1 ORDER BY appdate DESC',
         [user.id]
       );
       const loans = result.rows.map(row => ({
-        ApplicationID: row.applicationid,
-        AppDate: row.appdate,
-        StartDate: row.startdate,
-        EndDate: row.enddate,
-        ApprovedAmt: row.approvedamt,
-        Status: row.status,
-        CustomerID: row.customerid,
+        applicationid: row.applicationid,
+        appdate: row.appdate,
+        startdate: row.startdate,
+        enddate: row.enddate,
+        approvedamt: row.approvedamt,
+        customerid: row.customerid,
       }));
       return response.status(200).json(loans);
     }
