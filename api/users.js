@@ -125,7 +125,13 @@ export default async function handler(request, response) {
     }
 
     if (method === 'POST' && action === 'customers') {
+      console.log('POST customers received:', request.body);
       const { nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, password, phones } = request.body;
+      
+      if (!nationalId || !firstName || !lastName) {
+        console.log('Missing required fields');
+        return response.status(400).json({ message: 'Required fields missing' });
+      }
       
       const existing = await pool.query('SELECT customerid FROM customer WHERE nationalid = $1', [nationalId]);
       if (existing.rows.length > 0) {
@@ -139,6 +145,7 @@ export default async function handler(request, response) {
       );
 
       const customerId = result.rows[0].customerid;
+      console.log('Customer created with ID:', customerId);
       
       if (phones && phones[0]) {
         await pool.query('INSERT INTO customer_phone (customerid, phone) VALUES ($1, $2)', [customerId, phones[0]]);

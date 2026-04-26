@@ -35,10 +35,13 @@ const ManagerCustomers = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted, formData:', formData);
     try {
       if (editingCustomer) {
+        console.log('Updating customer:', editingCustomer.CustomerID);
         await api.admin.updateCustomer(editingCustomer.CustomerID, formData);
       } else {
+        console.log('Creating customer with data:', formData);
         await api.admin.createCustomer(formData);
       }
       setShowModal(false);
@@ -55,8 +58,9 @@ const ManagerCustomers = () => {
         phones: [''],
       });
       fetchCustomers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving customer:', error);
+      alert(error.response?.data?.message || 'Error saving customer');
     }
   };
 
