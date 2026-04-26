@@ -7,41 +7,25 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const extractErrorMessage = (err: any): string => {
-  if (err.response?.data?.error) return String(err.response.data.error);
-  if (err.response?.statusText) return `Error ${err.response.status}: ${err.response.statusText}`;
-  if (err.message) return String(err.message);
-  if (err.error) return String(err.error);
-  return 'An unexpected error occurred';
-};
-
 export const login = {
   customer: async (nationalId: string, password: string) => {
-    try {
-      const response = await axios.post(`${API_BASE}/login/customer`, {
-        nationalId,
-        password,
-      }, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-      return response.data;
-    } catch (error: any) {
-      throw new Error(extractErrorMessage(error));
-    }
+    const response = await axios.post(`${API_BASE}/login/customer`, {
+      nationalId,
+      password,
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return response.data;
   },
   
   employee: async (employeeId: string, password: string) => {
-    try {
-      const response = await axios.post(`${API_BASE}/login/employee`, {
-        employeeId: parseInt(employeeId),
-        password,
-      }, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-      return response.data;
-    } catch (error: any) {
-      throw new Error(extractErrorMessage(error));
-    }
+    const response = await axios.post(`${API_BASE}/login/employee`, {
+      employeeId: parseInt(employeeId),
+      password,
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return response.data;
   },
 };
 

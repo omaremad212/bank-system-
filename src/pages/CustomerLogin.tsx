@@ -23,11 +23,13 @@ const CustomerLogin = () => {
         login(result.user);
         navigate('/customer');
       } else {
-        setError(typeof result === 'object' ? JSON.stringify(result) : (result?.error || 'Invalid credentials'));
+        const msg = result?.message || result?.error || 'Invalid credentials';
+        setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
       }
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.error || err?.message || err?.error || 'Unable to login. Please try again.';
-      setError(String(errorMessage));
+      console.error('Login error:', err);
+      const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || err?.error || 'Login failed';
+      setError(String(msg));
     } finally {
       setLoading(false);
     }
