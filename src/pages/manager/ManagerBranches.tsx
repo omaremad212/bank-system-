@@ -82,10 +82,10 @@ const ManagerBranches = () => {
           </thead>
           <tbody>
             {branches.map((branch: any) => (
-              <tr key={branch.BranchID}>
-                <td>{branch.BranchID}</td>
-                <td>{branch.BranchName}</td>
-                <td>{branch.Location}</td>
+              <tr key={branch.branchid}>
+                <td>{branch.branchid}</td>
+                <td>{branch.branchname || '-'}</td>
+                <td>{branch.location || '-'}</td>
               </tr>
             ))}
           </tbody>
@@ -104,10 +104,10 @@ const ManagerBranches = () => {
           </thead>
           <tbody>
             {departments.map((dept: any) => (
-              <tr key={dept.DepartmentID}>
-                <td>{dept.DepartmentID}</td>
-                <td>{dept.DepartmentName}</td>
-                <td>{dept.branchName}</td>
+              <tr key={dept.departmentid}>
+                <td>{dept.departmentid}</td>
+                <td>{dept.departmentname || '-'}</td>
+                <td>{dept.branchid || '-'}</td>
               </tr>
             ))}
           </tbody>
@@ -128,16 +128,16 @@ const ManagerBranches = () => {
           </thead>
           <tbody>
             {atms.map((atm: any) => (
-              <tr key={atm.ATMID}>
-                <td>{atm.ATMID}</td>
-                <td>{atm.Location}</td>
-                <td>{atm.InstallDate}</td>
+              <tr key={atm.atmid}>
+                <td>{atm.atmid}</td>
+                <td>{atm.location || '-'}</td>
+                <td>{atm.installdate || '-'}</td>
                 <td>
-                  <span className={`badge ${atm.Status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
-                    {atm.Status}
+                  <span className={`badge ${atm.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                    {atm.status || '-'}
                   </span>
                 </td>
-                <td>{atm.branchName}</td>
+                <td>{atm.branchid || '-'}</td>
               </tr>
             ))}
           </tbody>
@@ -172,7 +172,7 @@ const ManagerBranches = () => {
                     required
                   >
                     {branches.map((b: any) => (
-                      <option key={b.BranchID} value={b.BranchID}>{b.BranchName}</option>
+                      <option key={b.branchid} value={b.branchid}>{b.branchname || '-'}</option>
                     ))}
                   </select>
                 </div>

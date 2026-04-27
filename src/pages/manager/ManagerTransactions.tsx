@@ -83,17 +83,17 @@ const ManagerTransactions = () => {
           </thead>
           <tbody>
             {transactions.map((tx: any) => (
-              <tr key={tx.TransactionID}>
-                <td>{tx.TransactionID}</td>
-                <td>{tx.Date_Time}</td>
-                <td>{tx.accountNumber}</td>
+              <tr key={tx.transactionid}>
+                <td>{tx.transactionid}</td>
+                <td>{tx.date_time}</td>
+                <td>{tx.accountnumber}</td>
                 <td>
-                  <span className={`badge ${tx.TransactionType === 'Deposit' ? 'badge-success' : 'badge-warning'}`}>
-                    {tx.TransactionType}
+                  <span className={`badge ${tx.transactiontype === 'Deposit' ? 'badge-success' : 'badge-warning'}`}>
+                    {tx.transactiontype}
                   </span>
                 </td>
-                <td>${tx.Amount?.toLocaleString()}</td>
-                <td>{tx.atmLocation || 'N/A'}</td>
+                <td>${(tx.amount || 0).toLocaleString()}</td>
+                <td>{tx.atmid || '-'}</td>
               </tr>
             ))}
           </tbody>
@@ -119,8 +119,8 @@ const ManagerTransactions = () => {
                   >
                     <option value="">Select Account</option>
                     {accounts.map((a: any) => (
-                      <option key={a.AccountID} value={a.AccountID}>
-                        {a.AccountNumber} - {a.customerName}
+                      <option key={a.accountid} value={a.accountid}>
+                        {a.accountnumber} - {a.customername || '-'}
                       </option>
                     ))}
                   </select>

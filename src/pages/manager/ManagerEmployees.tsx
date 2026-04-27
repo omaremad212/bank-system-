@@ -42,7 +42,7 @@ const ManagerEmployees = () => {
     e.preventDefault();
     try {
       if (editingEmployee) {
-        await api.admin.updateEmployee(editingEmployee.EmployeeID, formData);
+        await api.admin.updateEmployee(editingEmployee.employeeid, formData);
       } else {
         await api.admin.createEmployee(formData);
       }
@@ -57,15 +57,15 @@ const ManagerEmployees = () => {
   const handleEdit = (employee: any) => {
     setEditingEmployee(employee);
     setFormData({
-      firstName: employee.FirstName,
-      lastName: employee.LastName,
-      gender: employee.Gender,
-      salary: employee.Salary,
-      departmentId: employee.DepartmentID,
+      firstName: employee.firstname,
+      lastName: employee.lastname,
+      gender: employee.gender,
+      salary: employee.salary,
+      departmentId: employee.departmentid,
       roleType: employee.roleType || 'Employee',
-      jobTitle: employee.JobTitle || '',
+      jobTitle: employee.jobTitle || '',
       branchLocation: '',
-      clerkLevel: employee.ClerkLevel || 'Clerk',
+      clerkLevel: employee.clerkLevel || 'Clerk',
     });
     setShowModal(true);
   };
@@ -133,16 +133,16 @@ const ManagerEmployees = () => {
           </thead>
           <tbody>
             {employees.map((employee: any) => (
-              <tr key={employee.EmployeeID}>
-                <td>{employee.EmployeeID}</td>
-                <td>{employee.FirstName} {employee.LastName}</td>
-                <td>{employee.Gender}</td>
-                <td>${employee.Salary?.toLocaleString()}</td>
-                <td>{employee.roleType || 'Employee'}</td>
-                <td>{employee.departmentName}</td>
+              <tr key={employee.employeeid}>
+                <td>{employee.employeeid}</td>
+                <td>{employee.firstname && employee.lastname ? `${employee.firstname} ${employee.lastname}` : '-'}</td>
+                <td>{employee.gender || '-'}</td>
+                <td>${(employee.salary || 0).toLocaleString()}</td>
+                <td>{employee.roleType || '-'}</td>
+                <td>{employee.departmentname || '-'}</td>
                 <td>
                   <button className="btn btn-sm btn-primary" onClick={() => handleEdit(employee)}>Edit</button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(employee.EmployeeID)} style={{ marginLeft: '0.5rem' }}>Delete</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(employee.employeeid)} style={{ marginLeft: '0.5rem' }}>Delete</button>
                 </td>
               </tr>
             ))}
@@ -213,7 +213,7 @@ const ManagerEmployees = () => {
                       onChange={e => setFormData({ ...formData, departmentId: Number(e.target.value) })}
                     >
                       {departments.map((d: any) => (
-                        <option key={d.DepartmentID} value={d.DepartmentID}>{d.DepartmentName}</option>
+                        <option key={d.departmentid || d.id} value={d.departmentid || d.id}>{d.departmentname || '-'}</option>
                       ))}
                     </select>
                   </div>

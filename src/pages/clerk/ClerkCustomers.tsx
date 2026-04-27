@@ -106,35 +106,35 @@ const ClerkCustomers = () => {
               <div className="profile-card-content">
                 <div className="profile-item">
                   <label>Customer ID</label>
-                  <span>#{selectedCustomer.CustomerID}</span>
+                  <span>#{selectedCustomer.customerid || selectedCustomer.id}</span>
                 </div>
                 <div className="profile-item">
                   <label>Full Name</label>
-                  <span>{selectedCustomer.FirstName} {selectedCustomer.LastName}</span>
+                  <span>{selectedCustomer.firstname && selectedCustomer.lastname ? `${selectedCustomer.firstname} ${selectedCustomer.lastname}` : '-'}</span>
                 </div>
                 <div className="profile-item">
                   <label>National ID</label>
-                  <span>{selectedCustomer.NationalID}</span>
+                  <span>{selectedCustomer.nationalid || '-'}</span>
                 </div>
                 <div className="profile-item">
                   <label>Gender</label>
-                  <span>{selectedCustomer.Gender}</span>
+                  <span>{selectedCustomer.gender || '-'}</span>
                 </div>
                 <div className="profile-item">
                   <label>Date of Birth</label>
-                  <span>{selectedCustomer.DateOfBirth}</span>
+                  <span>{selectedCustomer.dateofbirth || '-'}</span>
                 </div>
                 <div className="profile-item">
                   <label>Street</label>
-                  <span>{selectedCustomer.Street}</span>
+                  <span>{selectedCustomer.street || '-'}</span>
                 </div>
                 <div className="profile-item">
                   <label>Area</label>
-                  <span>{selectedCustomer.Area}</span>
+                  <span>{selectedCustomer.area || '-'}</span>
                 </div>
                 <div className="profile-item">
                   <label>State</label>
-                  <span>{selectedCustomer.State}</span>
+                  <span>{selectedCustomer.state || '-'}</span>
                 </div>
               </div>
               

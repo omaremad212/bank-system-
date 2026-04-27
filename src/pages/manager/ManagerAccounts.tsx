@@ -100,19 +100,19 @@ const ManagerAccounts = () => {
           </thead>
           <tbody>
             {accounts.map((account: any) => (
-              <tr key={account.AccountID}>
-                <td>{account.AccountID}</td>
-                <td>{account.AccountNumber}</td>
-                <td>{account.customerName}</td>
+              <tr key={account.accountid}>
+                <td>{account.accountid}</td>
+                <td>{account.accountnumber}</td>
+                <td>{account.customername || '-'}</td>
                 <td>
-                  <span className={`badge ${account.AccountType === 'Savings' ? 'badge-success' : 'badge-info'}`}>
-                    {account.AccountType}
+                  <span className={`badge ${account.accounttype === 'Savings' ? 'badge-success' : 'badge-info'}`}>
+                    {account.accounttype}
                   </span>
                 </td>
                 <td>${(account.balance || 0).toLocaleString()}</td>
-                <td>{account.branchName}</td>
+                <td>{account.branchname || '-'}</td>
                 <td>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(account.AccountID)}>Delete</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(account.accountid)}>Delete</button>
                 </td>
               </tr>
             ))}
@@ -139,8 +139,8 @@ const ManagerAccounts = () => {
                   >
                     <option value="">Select Customer</option>
                     {customers.map((c: any) => (
-                      <option key={c.CustomerID} value={c.CustomerID}>
-                        {c.FirstName} {c.LastName} ({c.NationalID})
+                      <option key={c.customerid || c.id} value={c.customerid || c.id}>
+                        {c.firstname && c.lastname ? `${c.firstname} ${c.lastname}` : '-'} ({c.nationalid || '-'})
                       </option>
                     ))}
                   </select>
@@ -166,7 +166,7 @@ const ManagerAccounts = () => {
                     required
                   >
                     {branches.map((b: any) => (
-                      <option key={b.BranchID} value={b.BranchID}>{b.BranchName}</option>
+                      <option key={b.branchid || b.id} value={b.branchid || b.id}>{b.branchname || b.BranchName || '-'}</option>
                     ))}
                   </select>
                 </div>

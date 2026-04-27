@@ -26,7 +26,7 @@ const EmployeeEmployees = () => {
   }, []);
 
   const getDepartmentName = (departmentId: number) => {
-    return departments.find((d) => d.DepartmentID === departmentId)?.DepartmentName || 'N/A';
+    return departments.find((d: any) => d.departmentid === departmentId)?.departmentname || '-';
   };
 
   if (loading) {
@@ -63,15 +63,15 @@ const EmployeeEmployees = () => {
                 </tr>
               </thead>
               <tbody>
-                {employees.map((employee) => (
-                  <tr key={employee.EmployeeID}>
-                    <td>{employee.EmployeeID}</td>
+                {employees.map((employee: any) => (
+                  <tr key={employee.employeeid}>
+                    <td>{employee.employeeid}</td>
                     <td>
-                      {employee.FirstName} {employee.LastName}
+                      {employee.firstname && employee.lastname ? `${employee.firstname} ${employee.lastname}` : '-'}
                     </td>
-                    <td>{employee.Gender}</td>
-                    <td>{getDepartmentName(employee.DepartmentID)}</td>
-                    <td>${employee.Salary?.toLocaleString()}</td>
+                    <td>{employee.gender || '-'}</td>
+                    <td>{getDepartmentName(employee.departmentid)}</td>
+                    <td>${(employee.salary || 0).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

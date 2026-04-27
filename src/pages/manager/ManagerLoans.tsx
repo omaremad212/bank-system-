@@ -11,7 +11,6 @@ const ManagerLoans = () => {
     approvedAmt: 0,
     startDate: '',
     endDate: '',
-    status: 'Pending',
   });
 
   const fetchData = async () => {
@@ -43,7 +42,6 @@ const ManagerLoans = () => {
         approvedAmt: 0,
         startDate: '',
         endDate: '',
-        status: 'Pending',
       });
       fetchData();
     } catch (error) {
@@ -52,19 +50,11 @@ const ManagerLoans = () => {
   };
 
   const handleApprove = async (id: number) => {
-    const loan = loans.find(l => l.ApplicationID === id);
-    if (loan) {
-      await api.admin.updateLoan(id, { 
-        Status: 'Approved',
-        StartDate: new Date().toISOString().split('T')[0],
-        EndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      });
-      fetchData();
-    }
+    await api.admin.updateLoan(id, { approvedamt: loans.find(l => l.applicationid === id)?.approvedamt });
+    fetchData();
   };
 
   const handleReject = async (id: number) => {
-    await api.admin.updateLoan(id, { Status: 'Rejected' });
     fetchData();
   };
 
@@ -104,26 +94,15 @@ const ManagerLoans = () => {
           </thead>
           <tbody>
             {loans.map((loan: any) => (
-              <tr key={loan.ApplicationID}>
-                <td>{loan.ApplicationID}</td>
-                <td>{loan.customerName}</td>
-                <td>{loan.AppDate}</td>
-                <td>${(loan.ApprovedAmt || 0).toLocaleString()}</td>
-                <td>
-                  <span className={`badge ${loan.Status === 'Approved' ? 'badge-success' : loan.Status === 'Rejected' ? 'badge-danger' : 'badge-warning'}`}>
-                    {loan.Status}
-                  </span>
-                </td>
-                <td>{loan.StartDate || '-'}</td>
-                <td>{loan.EndDate || '-'}</td>
-                <td>
-                  {loan.Status === 'Pending' && (
-                    <>
-                      <button className="btn btn-sm btn-success" onClick={() => handleApprove(loan.ApplicationID)}>Approve</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleReject(loan.ApplicationID)} style={{ marginLeft: '0.5rem' }}>Reject</button>
-                    </>
-                  )}
-                </td>
+              <tr key={loan.applicationid}>
+                <td>{loan.applicationid}</td>
+                <td>{loan.customerid || '-'}</td>
+                <td>{loan.appdate || '-'}</td>
+                <td>${(loan.approvedamt || 0).toLocaleString()}</td>
+                <td>-</td>
+                <td>{loan.startdate || '-'}</td>
+                <td>{loan.enddate || '-'}</td>
+                <td>-</td>
               </tr>
             ))}
           </tbody>
@@ -149,8 +128,8 @@ const ManagerLoans = () => {
                   >
                     <option value="">Select Customer</option>
                     {customers.map((c: any) => (
-                      <option key={c.CustomerID} value={c.CustomerID}>
-                        {c.FirstName} {c.LastName}
+                      <option key={c.customerid || c.id} value={c.customerid || c.id}>
+                        {c.firstname && c.lastname ? `${c.firstname} ${c.lastname}` : '-'}
                       </option>
                     ))}
                   </select>
@@ -184,18 +163,6 @@ const ManagerLoans = () => {
                       onChange={e => setFormData({ ...formData, endDate: e.target.value })}
                     />
                   </div>
-                </div>
-                <div style={{ marginTop: '1rem' }}>
-                  <label className="form-label">Status</label>
-                  <select
-                    className="form-select"
-                    value={formData.status}
-                    onChange={e => setFormData({ ...formData, status: e.target.value })}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
-                  </select>
                 </div>
               </div>
               <div className="modal-footer">

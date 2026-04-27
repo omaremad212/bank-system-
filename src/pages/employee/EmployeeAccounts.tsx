@@ -34,7 +34,7 @@ const EmployeeAccounts = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.admin.createAccount(formData.customerId, formData.accountType, formData.branchId);
+      await api.admin.createAccount({ customerId: formData.customerId, accountType: formData.accountType, branchId: formData.branchId });
       const updatedAccounts = await api.admin.getAccounts();
       setAccounts(updatedAccounts);
       setShowModal(false);

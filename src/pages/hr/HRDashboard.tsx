@@ -117,13 +117,13 @@ const HRDashboard = () => {
             </thead>
             <tbody>
               {employees.map((emp: any) => (
-                <tr key={emp.EmployeeID}>
-                  <td>{emp.EmployeeID}</td>
-                  <td>{emp.FirstName} {emp.LastName}</td>
-                  <td>{emp.Gender}</td>
-                  <td>${emp.Salary?.toLocaleString()}</td>
-                  <td>{emp.roleType || 'Employee'}</td>
-                  <td>{emp.departmentName || 'N/A'}</td>
+                <tr key={emp.employeeid}>
+                  <td>{emp.employeeid}</td>
+                  <td>{emp.firstname && emp.lastname ? `${emp.firstname} ${emp.lastname}` : '-'}</td>
+                  <td>{emp.gender || '-'}</td>
+                  <td>${(emp.salary || 0).toLocaleString()}</td>
+                  <td>{emp.roleType || '-'}</td>
+                  <td>{emp.departmentname || '-'}</td>
                 </tr>
               ))}
             </tbody>
