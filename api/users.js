@@ -31,25 +31,35 @@ const calculateBalance = async (accountId) => {
 };
 
 const isManager = (user) => {
-  console.log('Checking manager, user:', user);
   return user.id === 1;
+};
+
+const getEmployeeRole = async (employeeId) => {
+  try {
+    const manager = await pool.query('SELECT 1 FROM manager_details WHERE employeeid = $1 LIMIT 1', [employeeId]);
+    if (manager.rows.length > 0) return { roleType: 'Manager' };
+    const teller = await pool.query('SELECT 1 FROM teller_details WHERE employeeid = $1 LIMIT 1', [employeeId]);
+    if (teller.rows.length > 0) return { roleType: 'Teller' };
+    const clerk = await pool.query('SELECT 1 FROM clerk_details WHERE employeeid = $1 LIMIT 1', [employeeId]);
+    if (clerk.rows.length > 0) return { roleType: 'Clerk' };
+    return { roleType: 'Employee' };
+  } catch (e) {
+    return { roleType: 'Employee' };
+  }
 };
 
 export default async function handler(request, response) {
   const user = authenticateToken(request);
-  console.log('Auth user:', user);
   
   if (!user || user.type !== 'employee') {
     return response.status(403).json({ message: 'Employee access required' });
   }
 
-  const action = request.query.action || request.query.action;
+  const action = request.query.action;
   const method = request.method;
 
-  // Check if this is a write operation
   const isWrite = method === 'POST' || method === 'PUT' || method === 'DELETE';
   
-  // Only employee ID 1 (Mohamed Anwar) can do write operations
   if (isWrite && !isManager(user)) {
     return response.status(403).json({ message: 'Only managers can perform this action' });
   }
@@ -80,25 +90,14 @@ export default async function handler(request, response) {
       }
 
       if (action === 'employees') {
-        const getEmployeeRole = async (employeeId) => {
-          try {
-            const manager = await pool.query('SELECT 1 FROM manager_details WHERE employeeid = $1 LIMIT 1', [employeeId]);
-            if (manager.rows.length > 0) return { roleType: 'Manager' };
-            const teller = await pool.query('SELECT 1 FROM teller_details WHERE employeeid = $1 LIMIT 1', [employeeId]);
-            if (teller.rows.length > 0) return { roleType: 'Teller' };
-            const clerk = await pool.query('SELECT 1 FROM clerk_details WHERE employeeid = $1 LIMIT 1', [employeeId]);
-            if (clerk.rows.length > 0) return { roleType: 'Clerk' };
-            return { roleType: 'Employee' };
-          } catch (e) {
-            console.error('Error getting employee role:', e);
-            return { roleType: 'Employee' };
-          }
-        };
-
         const result = await pool.query('SELECT employeeid, firstname, lastname, gender, salary, email, departmentid FROM employee');
         const employeesWithRole = await Promise.all(result.rows.map(async (employee) => {
           const role = await getEmployeeRole(employee.employeeid);
-          const departmentResult = await pool.query('SELECT departmentname FROM department WHERE departmentid = $1', [employee.departmentid]);
+          let departmentname = null;
+          try {
+            const dept = await pool.query('SELECT departmentname FROM department WHERE departmentid = $1', [employee.departmentid]);
+            departmentname = dept.rows[0]?.departmentname;
+          } catch {}
           return {
             employeeid: employee.employeeid,
             firstname: employee.firstname,
@@ -108,7 +107,7 @@ export default async function handler(request, response) {
             email: employee.email,
             departmentid: employee.departmentid,
             ...role,
-            departmentname: departmentResult.rows[0]?.departmentname,
+            departmentname,
           };
         }));
         return response.status(200).json(employeesWithRole);
@@ -122,8 +121,15 @@ export default async function handler(request, response) {
         );
         const accountsWithBalance = await Promise.all(result.rows.map(async (account) => {
           const balance = await calculateBalance(account.accountid);
-          const customerResult = await pool.query('SELECT firstname, lastname FROM customer WHERE customerid = $1', [account.customerid]);
-          const branchResult = await pool.query('SELECT branchname FROM branch WHERE branchid = $1', [account.branchid]);
+          let customername = null, branchname = null;
+          try {
+            const customerResult = await pool.query('SELECT firstname, lastname FROM customer WHERE customerid = $1', [account.customerid]);
+            customername = customerResult.rows[0] ? `${customerResult.rows[0].firstname} ${customerResult.rows[0].lastname}` : null;
+          } catch {}
+          try {
+            const branchResult = await pool.query('SELECT branchname FROM branch WHERE branchid = $1', [account.branchid]);
+            branchname = branchResult.rows[0]?.branchname;
+          } catch {}
           return {
             accountid: account.accountid,
             accountnumber: account.accountnumber,
@@ -132,8 +138,8 @@ export default async function handler(request, response) {
             customerid: account.customerid,
             branchid: account.branchid,
             balance,
-            customername: customerResult.rows[0] ? `${customerResult.rows[0].firstname} ${customerResult.rows[0].lastname}` : null,
-            branchname: branchResult.rows[0]?.branchname,
+            customername,
+            branchname,
           };
         }));
         return response.status(200).json(accountsWithBalance);
@@ -141,10 +147,8 @@ export default async function handler(request, response) {
     }
 
     if (method === 'POST' && action === 'customers') {
-      console.log('POST customers received:', request.body);
       const { nationalId, firstName, lastName, gender, dateOfBirth, street, area, state, phone } = request.body;
       
-      // Validation
       if (!nationalId || !firstName || !lastName) {
         return response.status(400).json({ message: 'First name, last name, and National ID are required' });
       }
@@ -153,13 +157,11 @@ export default async function handler(request, response) {
         return response.status(400).json({ message: 'Gender is required' });
       }
       
-      // Check duplicate
       const existing = await pool.query('SELECT customerid FROM customer WHERE nationalid = $1', [nationalId]);
       if (existing.rows.length > 0) {
         return response.status(400).json({ message: 'National ID already exists' });
       }
 
-      // Insert customer
       const result = await pool.query(
         `INSERT INTO customer (nationalid, firstname, lastname, gender, dateofbirth, street, area, state)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING customerid`,
@@ -167,9 +169,7 @@ export default async function handler(request, response) {
       );
 
       const customerId = result.rows[0].customerid;
-      console.log('Customer created with ID:', customerId);
       
-      // Insert phone if provided
       if (phone) {
         await pool.query('INSERT INTO customer_phone (customerid, phone) VALUES ($1, $2)', [customerId, phone]);
       }
@@ -178,7 +178,7 @@ export default async function handler(request, response) {
     }
 
     if (method === 'PUT' && action === 'customers') {
-      const id = request.query.id || request.query.id;
+      const id = request.query.id;
       const { firstName, lastName, gender, dateOfBirth, street, area, state, phone } = request.body;
 
       await pool.query(
@@ -187,9 +187,7 @@ export default async function handler(request, response) {
         [firstName, lastName, gender, dateOfBirth || null, street || null, area || null, state || null, id]
       );
 
-      // Update phone
       if (phone) {
-        // Delete existing phones and insert new one
         await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [id]);
         await pool.query('INSERT INTO customer_phone (customerid, phone) VALUES ($1, $2)', [id, phone]);
       }
@@ -207,22 +205,17 @@ export default async function handler(request, response) {
         return response.status(400).json({ message: 'Invalid customer ID' });
       }
       
-      try {
-        await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [customerId]);
-        
-        const accounts = await pool.query('SELECT accountid FROM bank_account WHERE customerid = $1', [customerId]);
-        for (const acc of accounts.rows) {
-          await pool.query('DELETE FROM savings_account WHERE accountid = $1', [acc.accountid]);
-          await pool.query('DELETE FROM checking_account WHERE accountid = $1', [acc.accountid]);
-        }
-        await pool.query('DELETE FROM bank_account WHERE customerid = $1', [customerId]);
-        await pool.query('DELETE FROM loan_application WHERE customerid = $1', [customerId]);
-        await pool.query('DELETE FROM customer WHERE customerid = $1', [customerId]);
-        return response.status(200).json({ message: 'Customer deleted', customerId });
-      } catch (error) {
-        console.error('Delete customer error:', error);
-        return response.status(500).json({ message: 'Failed to delete customer: ' + error.message });
+      await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [customerId]);
+      
+      const accounts = await pool.query('SELECT accountid FROM bank_account WHERE customerid = $1', [customerId]);
+      for (const acc of accounts.rows) {
+        await pool.query('DELETE FROM savings_account WHERE accountid = $1', [acc.accountid]).catch(() => {});
+        await pool.query('DELETE FROM checking_account WHERE accountid = $1', [acc.accountid]).catch(() => {});
       }
+      await pool.query('DELETE FROM bank_account WHERE customerid = $1', [customerId]).catch(() => {});
+      await pool.query('DELETE FROM loan_application WHERE customerid = $1', [customerId]).catch(() => {});
+      await pool.query('DELETE FROM customer WHERE customerid = $1', [customerId]);
+      return response.status(200).json({ message: 'Customer deleted', customerId });
     }
 
     if (method === 'POST' && action === 'employees') {
@@ -243,7 +236,7 @@ export default async function handler(request, response) {
     }
 
     if (method === 'PUT' && action === 'employees') {
-      const id = request.query.id || request.query.id;
+      const id = request.query.id;
       const { firstName, lastName, gender, salary, email, departmentId } = request.body;
 
       await pool.query(
@@ -256,7 +249,7 @@ export default async function handler(request, response) {
     }
 
     if (method === 'DELETE' && action === 'employees') {
-      const id = request.query.id || request.query.id;
+      const id = request.query.id;
       await pool.query('DELETE FROM employee WHERE employeeid = $1', [id]);
       return response.status(200).json({ message: 'Employee deleted' });
     }
@@ -294,7 +287,7 @@ export default async function handler(request, response) {
     }
 
     if (method === 'DELETE' && action === 'accounts') {
-      const id = request.query.id || request.query.id;
+      const id = request.query.id;
       await pool.query('DELETE FROM bank_account WHERE accountid = $1', [id]);
       return response.status(200).json({ message: 'Account deleted' });
     }
@@ -302,6 +295,6 @@ export default async function handler(request, response) {
     return response.status(400).json({ message: 'Invalid action or method' });
   } catch (error) {
     console.error('Users API error:', error);
-    return response.status(500).json({ message: 'Internal server error' });
+    return response.status(500).json({ message: 'Internal server error: ' + error.message });
   }
 }

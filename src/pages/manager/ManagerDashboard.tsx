@@ -16,52 +16,42 @@ const ManagerDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      console.log('Dashboard: Starting to fetch stats...');
+    const fetchData = async (apiCall: () => Promise<any>, fallback: any = []) => {
       try {
-        const [customers, accounts, transactions, loans, employees] = await Promise.all([
-          api.admin.getCustomers(),
-          api.admin.getAccounts(),
-          api.admin.getTransactions(),
-          api.admin.getLoans(),
-          api.admin.getEmployees(),
-        ]);
-        
-        console.log('Dashboard fetched data:', {
-          customers,
-          accounts,
-          transactions,
-          loans,
-          employees
-        });
-        
-        const totalBalance = Array.isArray(accounts) 
-          ? accounts.reduce((sum: number, acc: any) => sum + (acc.balance || 0), 0)
-          : 0;
-        
-        setStats({
-          customers: Array.isArray(customers) ? customers.length : 0,
-          accounts: Array.isArray(accounts) ? accounts.length : 0,
-          transactions: Array.isArray(transactions) ? transactions.length : 0,
-          loans: Array.isArray(loans) ? loans.length : 0,
-          employees: Array.isArray(employees) ? employees.length : 0,
-          totalBalance,
-        });
-        
-        console.log('Stats set to:', {
-          customers: Array.isArray(customers) ? customers.length : 0,
-          accounts: Array.isArray(accounts) ? accounts.length : 0,
-          transactions: Array.isArray(transactions) ? transactions.length : 0,
-          loans: Array.isArray(loans) ? loans.length : 0,
-          employees: Array.isArray(employees) ? employees.length : 0,
-          totalBalance,
-        });
+        return await apiCall();
       } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setLoading(false);
+        console.error('API error:', error);
+        return fallback;
       }
     };
+
+    const fetchStats = async () => {
+      console.log('Dashboard: Fetching stats...');
+      
+      const customers = await fetchData(() => api.admin.getCustomers());
+      const accounts = await fetchData(() => api.admin.getAccounts());
+      const transactions = await fetchData(() => api.admin.getTransactions());
+      const loans = await fetchData(() => api.admin.getLoans());
+      const employees = await fetchData(() => api.admin.getEmployees());
+      
+      console.log('Dashboard data:', { customers, accounts, transactions, loans, employees });
+      
+      const totalBalance = Array.isArray(accounts) 
+        ? accounts.reduce((sum: number, acc: any) => sum + (acc.balance || 0), 0)
+        : 0;
+      
+      setStats({
+        customers: Array.isArray(customers) ? customers.length : 0,
+        accounts: Array.isArray(accounts) ? accounts.length : 0,
+        transactions: Array.isArray(transactions) ? transactions.length : 0,
+        loans: Array.isArray(loans) ? loans.length : 0,
+        employees: Array.isArray(employees) ? employees.length : 0,
+        totalBalance,
+      });
+      
+      setLoading(false);
+    };
+    
     fetchStats();
   }, []);
 
