@@ -6,6 +6,7 @@ const ManagerEmployees = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -33,17 +34,21 @@ const ManagerEmployees = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     try {
       if (editingEmployee) {
         await api.admin.updateEmployee(editingEmployee.employeeid, formData);
       } else {
-        await api.admin.createEmployee(formData);
+        const result = await api.admin.createEmployee(formData);
+        console.log('Create result:', result);
       }
       setShowModal(false);
       setEditingEmployee(null);
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving employee:', error);
+      const message = error?.response?.data?.message || error?.message || 'Failed to save employee';
+      setError(message);
     }
   };
 
@@ -91,6 +96,7 @@ const ManagerEmployees = () => {
           className="btn btn-primary"
           onClick={() => {
             setEditingEmployee(null);
+            setError('');
             setFormData({
               firstName: '',
               lastName: '',
@@ -116,7 +122,6 @@ const ManagerEmployees = () => {
               <th>Gender</th>
               <th>Salary</th>
               <th>Role</th>
-              <th>Department</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -128,7 +133,6 @@ const ManagerEmployees = () => {
                 <td>{employee.gender || '-'}</td>
                 <td>${(employee.salary || 0).toLocaleString()}</td>
                 <td>{employee.roleType || '-'}</td>
-                <td>{employee.departmentname || '-'}</td>
                 <td>
                   <button className="btn btn-sm btn-primary" onClick={() => handleEdit(employee)}>Edit</button>
                   <button className="btn btn-sm btn-danger" onClick={() => handleDelete(employee.employeeid)} style={{ marginLeft: '0.5rem' }}>Delete</button>
@@ -217,34 +221,27 @@ const ManagerEmployees = () => {
                     </div>
                   )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                  <div>
-                    <label className="form-label">Salary</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.salary}
-                      onChange={e => setFormData({ ...formData, salary: Number(e.target.value) })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Role Type</label>
-                    <select
-                      className="form-select"
-                      value={formData.roleType}
-                      onChange={e => setFormData({ ...formData, roleType: e.target.value })}
-                    >
-                      <option value="Employee">Employee</option>
-                      <option value="Manager">Manager</option>
-                      <option value="Teller">Teller</option>
-                      <option value="Clerk">Clerk</option>
-                      <option value="IT">IT</option>
-                      <option value="HR">HR</option>
-                      <option value="Customer Service">Customer Service</option>
-                    </select>
-                  </div>
+                <div style={{ marginTop: '1rem' }}>
+                  <label className="form-label">Role Type</label>
+                  <select
+                    className="form-select"
+                    value={formData.roleType}
+                    onChange={e => setFormData({ ...formData, roleType: e.target.value })}
+                  >
+                    <option value="Employee">Employee</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Teller">Teller</option>
+                    <option value="Clerk">Clerk</option>
+                    <option value="IT">IT</option>
+                    <option value="HR">HR</option>
+                    <option value="Customer Service">Customer Service</option>
+                  </select>
                 </div>
+                {error && (
+                  <div style={{ color: 'red', marginTop: '1rem', padding: '0.5rem', backgroundColor: '#fee', borderRadius: '4px' }}>
+                    {error}
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>

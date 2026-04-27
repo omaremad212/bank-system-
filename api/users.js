@@ -219,6 +219,7 @@ export default async function handler(request, response) {
     }
 
     if (method === 'POST' && action === 'employees') {
+      console.log('Create employee body:', request.body);
       const { firstName, lastName, gender, email, password, salary, roleType } = request.body;
       
       if (!firstName || !lastName || !email || !password) {
