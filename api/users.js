@@ -219,7 +219,7 @@ export default async function handler(request, response) {
     }
 
     if (method === 'POST' && action === 'employees') {
-      const { firstName, lastName, gender, email, password, salary, departmentId, roleType } = request.body;
+      const { firstName, lastName, gender, email, password, salary, roleType } = request.body;
       
       if (!firstName || !lastName || !email || !password) {
         return response.status(400).json({ message: 'First name, last name, email and password are required' });
@@ -231,9 +231,9 @@ export default async function handler(request, response) {
       }
 
       const result = await pool.query(
-        `INSERT INTO employee (firstname, lastname, gender, email, salary, departmentid, password)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING employeeid`,
-        [firstName, lastName, gender || 'Male', email, salary || 5000, departmentId || 1, password]
+        `INSERT INTO employee (firstname, lastname, gender, email, salary, password)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING employeeid`,
+        [firstName, lastName, gender || 'Male', email, salary || 5000, password]
       );
 
       const employeeId = result.rows[0].employeeid;

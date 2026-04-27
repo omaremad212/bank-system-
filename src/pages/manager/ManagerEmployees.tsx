@@ -3,7 +3,6 @@ import api from '../../services/api';
 
 const ManagerEmployees = () => {
   const [employees, setEmployees] = useState<any[]>([]);
-  const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
@@ -14,18 +13,13 @@ const ManagerEmployees = () => {
     email: '',
     password: '',
     salary: 5000,
-    departmentId: 1,
     roleType: 'Employee',
   });
 
   const fetchData = async () => {
     try {
-      const [employeesData, departmentsData] = await Promise.all([
-        api.admin.getEmployees(),
-        api.admin.getDepartments(),
-      ]);
+      const employeesData = await api.admin.getEmployees();
       setEmployees(employeesData);
-      setDepartments(departmentsData);
     } catch (error) {
       console.error('Error fetching employees:', error);
     } finally {
@@ -62,7 +56,6 @@ const ManagerEmployees = () => {
       email: employee.email || '',
       password: '',
       salary: employee.salary,
-      departmentId: employee.departmentid,
       roleType: employee.roleType || 'Employee',
     });
     setShowModal(true);
@@ -105,7 +98,6 @@ const ManagerEmployees = () => {
               email: '',
               password: '',
               salary: 5000,
-              departmentId: 1,
               roleType: 'Employee',
             });
             setShowModal(true);
@@ -227,16 +219,14 @@ const ManagerEmployees = () => {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
                   <div>
-                    <label className="form-label">Department</label>
-                    <select
-                      className="form-select"
-                      value={formData.departmentId}
-                      onChange={e => setFormData({ ...formData, departmentId: Number(e.target.value) })}
-                    >
-                      {departments.map((d: any) => (
-                        <option key={d.departmentid || d.id} value={d.departmentid || d.id}>{d.departmentname || '-'}</option>
-                      ))}
-                    </select>
+                    <label className="form-label">Salary</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={formData.salary}
+                      onChange={e => setFormData({ ...formData, salary: Number(e.target.value) })}
+                      required
+                    />
                   </div>
                   <div>
                     <label className="form-label">Role Type</label>
