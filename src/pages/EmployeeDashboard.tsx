@@ -153,7 +153,7 @@ const EmployeeDashboard = () => {
         <header className="main-header">
           <div className="main-header-left">
             <h1>{pageTitle}</h1>
-            <p>Welcome back, {user?.name} - {user?.departmentName || 'Employee'}</p>
+            <p>Welcome back, {user?.name} - {user?.roleType || 'Employee'}</p>
           </div>
           <div className="main-header-right">
             <button className="header-btn">
