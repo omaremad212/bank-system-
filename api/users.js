@@ -197,10 +197,25 @@ export default async function handler(request, response) {
     }
 
     if (method === 'DELETE' && action === 'customers') {
-      const id = request.query.id || request.query.id;
-      await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [id]);
-      await pool.query('DELETE FROM customer WHERE customerid = $1', [id]);
-      return response.status(200).json({ message: 'Customer deleted' });
+      const id = request.query.id;
+      if (!id) {
+        return response.status(400).json({ message: 'Customer ID is required' });
+      }
+      const customerId = parseInt(id);
+      if (isNaN(customerId)) {
+        return response.status(400).json({ message: 'Invalid customer ID' });
+      }
+      
+      try {
+        await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [customerId]);
+        await pool.query('DELETE FROM bank_account WHERE customerid = $1', [customerId]);
+        await pool.query('DELETE FROM loan_application WHERE customerid = $1', [customerId]);
+        await pool.query('DELETE FROM customer WHERE customerid = $1', [customerId]);
+        return response.status(200).json({ message: 'Customer deleted', customerId });
+      } catch (error) {
+        console.error('Delete customer error:', error);
+        return response.status(500).json({ message: 'Failed to delete customer' });
+      }
     }
 
     if (method === 'POST' && action === 'employees') {
