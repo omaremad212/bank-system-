@@ -255,7 +255,7 @@ export default async function handler(request, response) {
     }
 
     if (method === 'POST' && action === 'accounts') {
-      const { accountType, customerId, branchId } = request.body;
+      const { accountType, customerId, branchId, initialBalance } = request.body;
       
       if (!accountType || !customerId) {
         return response.status(400).json({ message: 'Account type and customer are required' });
@@ -283,13 +283,32 @@ export default async function handler(request, response) {
         await pool.query('INSERT INTO checking_account (accountid, overdraftlimit) VALUES ($1, 1000)', [accountId]);
       }
 
+      if (initialBalance && initialBalance > 0) {
+        await pool.query(
+          `INSERT INTO transactions (amount, transactiontype, accountid, date_time)
+           VALUES ($1, 'Deposit', $2, CURRENT_TIMESTAMP)`,
+          [initialBalance, accountId]
+        );
+      }
+
       return response.status(201).json({ message: 'Account created', accountId, accountNumber });
     }
 
     if (method === 'DELETE' && action === 'accounts') {
       const id = request.query.id;
-      await pool.query('DELETE FROM bank_account WHERE accountid = $1', [id]);
-      return response.status(200).json({ message: 'Account deleted' });
+      if (!id) {
+        return response.status(400).json({ message: 'Account ID is required' });
+      }
+      const accountId = parseInt(id);
+      if (isNaN(accountId)) {
+        return response.status(400).json({ message: 'Invalid account ID' });
+      }
+      
+      await pool.query('DELETE FROM transactions WHERE accountid = $1', [accountId]).catch(() => {});
+      await pool.query('DELETE FROM savings_account WHERE accountid = $1', [accountId]).catch(() => {});
+      await pool.query('DELETE FROM checking_account WHERE accountid = $1', [accountId]).catch(() => {});
+      await pool.query('DELETE FROM bank_account WHERE accountid = $1', [accountId]);
+      return response.status(200).json({ message: 'Account deleted', accountId });
     }
 
     return response.status(400).json({ message: 'Invalid action or method' });

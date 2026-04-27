@@ -11,6 +11,7 @@ const ManagerAccounts = () => {
     customerId: '',
     accountType: 'Savings',
     branchId: 1,
+    initialBalance: 0,
     interestRate: 5.0,
     overdraftLimit: 1000,
   });
@@ -45,6 +46,7 @@ const ManagerAccounts = () => {
         customerId: '',
         accountType: 'Savings',
         branchId: 1,
+        initialBalance: 0,
         interestRate: 5.0,
         overdraftLimit: 1000,
       });
@@ -169,6 +171,16 @@ const ManagerAccounts = () => {
                       <option key={b.branchid || b.id} value={b.branchid || b.id}>{b.branchname || b.BranchName || '-'}</option>
                     ))}
                   </select>
+                </div>
+                <div style={{ marginTop: '1rem' }}>
+                  <label className="form-label">Initial Balance ($)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={formData.initialBalance}
+                    onChange={e => setFormData({ ...formData, initialBalance: Number(e.target.value) })}
+                    min="0"
+                  />
                 </div>
                 {formData.accountType === 'Savings' && (
                   <div style={{ marginTop: '1rem' }}>
