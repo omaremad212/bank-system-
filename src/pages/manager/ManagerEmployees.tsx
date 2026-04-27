@@ -11,8 +11,6 @@ const ManagerEmployees = () => {
     firstName: '',
     lastName: '',
     gender: 'Male',
-    email: '',
-    password: '',
     salary: 5000,
     roleType: 'Employee',
   });
@@ -58,8 +56,6 @@ const ManagerEmployees = () => {
       firstName: employee.firstname,
       lastName: employee.lastname,
       gender: employee.gender,
-      email: employee.email || '',
-      password: '',
       salary: employee.salary,
       roleType: employee.roleType || 'Employee',
     });
@@ -101,8 +97,6 @@ const ManagerEmployees = () => {
               firstName: '',
               lastName: '',
               gender: 'Male',
-              email: '',
-              password: '',
               salary: 5000,
               roleType: 'Employee',
             });
@@ -196,30 +190,6 @@ const ManagerEmployees = () => {
                       required
                     />
                   </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                  <div>
-                    <label className="form-label">Email</label>
-                    <input
-                      type="email"
-                      className="form-input"
-                      value={formData.email}
-                      onChange={e => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-                  {!editingEmployee && (
-                    <div>
-                      <label className="form-label">Password</label>
-                      <input
-                        type="password"
-                        className="form-input"
-                        value={formData.password}
-                        onChange={e => setFormData({ ...formData, password: e.target.value })}
-                        required={!editingEmployee}
-                      />
-                    </div>
-                  )}
                 </div>
                 <div style={{ marginTop: '1rem' }}>
                   <label className="form-label">Role Type</label>
