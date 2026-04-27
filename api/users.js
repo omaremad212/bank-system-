@@ -219,7 +219,11 @@ export default async function handler(request, response) {
     }
 
     if (method === 'POST' && action === 'employees') {
-      const { firstName, lastName, gender, email, departmentId, password } = request.body;
+      const { firstName, lastName, gender, email, password, salary, departmentId, roleType } = request.body;
+      
+      if (!firstName || !lastName || !email || !password) {
+        return response.status(400).json({ message: 'First name, last name, email and password are required' });
+      }
       
       const existing = await pool.query('SELECT employeeid FROM employee WHERE email = $1', [email]);
       if (existing.rows.length > 0) {
@@ -227,12 +231,22 @@ export default async function handler(request, response) {
       }
 
       const result = await pool.query(
-        `INSERT INTO employee (firstname, lastname, gender, email, departmentid, password)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING employeeid`,
-        [firstName, lastName, gender, email, departmentId || 1, password]
+        `INSERT INTO employee (firstname, lastname, gender, email, salary, departmentid, password)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING employeeid`,
+        [firstName, lastName, gender || 'Male', email, salary || 5000, departmentId || 1, password]
       );
 
-      return response.status(201).json({ message: 'Employee created', employeeId: result.rows[0].employeeid });
+      const employeeId = result.rows[0].employeeid;
+      
+      if (roleType === 'Manager') {
+        await pool.query('INSERT INTO manager_details (employeeid) VALUES ($1)', [employeeId]).catch(() => {});
+      } else if (roleType === 'Teller') {
+        await pool.query('INSERT INTO teller_details (employeeid) VALUES ($1)', [employeeId]).catch(() => {});
+      } else if (roleType === 'Clerk') {
+        await pool.query('INSERT INTO clerk_details (employeeid) VALUES ($1)', [employeeId]).catch(() => {});
+      }
+
+      return response.status(201).json({ message: 'Employee created', employeeId });
     }
 
     if (method === 'PUT' && action === 'employees') {
@@ -250,8 +264,19 @@ export default async function handler(request, response) {
 
     if (method === 'DELETE' && action === 'employees') {
       const id = request.query.id;
-      await pool.query('DELETE FROM employee WHERE employeeid = $1', [id]);
-      return response.status(200).json({ message: 'Employee deleted' });
+      if (!id) {
+        return response.status(400).json({ message: 'Employee ID is required' });
+      }
+      const employeeId = parseInt(id);
+      if (isNaN(employeeId)) {
+        return response.status(400).json({ message: 'Invalid employee ID' });
+      }
+      
+      await pool.query('DELETE FROM manager_details WHERE employeeid = $1', [employeeId]).catch(() => {});
+      await pool.query('DELETE FROM teller_details WHERE employeeid = $1', [employeeId]).catch(() => {});
+      await pool.query('DELETE FROM clerk_details WHERE employeeid = $1', [employeeId]).catch(() => {});
+      await pool.query('DELETE FROM employee WHERE employeeid = $1', [employeeId]);
+      return response.status(200).json({ message: 'Employee deleted', employeeId });
     }
 
     if (method === 'POST' && action === 'accounts') {

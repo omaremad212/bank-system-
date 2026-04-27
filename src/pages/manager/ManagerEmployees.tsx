@@ -11,12 +11,11 @@ const ManagerEmployees = () => {
     firstName: '',
     lastName: '',
     gender: 'Male',
+    email: '',
+    password: '',
     salary: 5000,
     departmentId: 1,
     roleType: 'Employee',
-    jobTitle: '',
-    branchLocation: '',
-    clerkLevel: 'Clerk',
   });
 
   const fetchData = async () => {
@@ -60,12 +59,11 @@ const ManagerEmployees = () => {
       firstName: employee.firstname,
       lastName: employee.lastname,
       gender: employee.gender,
+      email: employee.email || '',
+      password: '',
       salary: employee.salary,
       departmentId: employee.departmentid,
       roleType: employee.roleType || 'Employee',
-      jobTitle: employee.jobTitle || '',
-      branchLocation: '',
-      clerkLevel: employee.clerkLevel || 'Clerk',
     });
     setShowModal(true);
   };
@@ -104,12 +102,11 @@ const ManagerEmployees = () => {
               firstName: '',
               lastName: '',
               gender: 'Male',
+              email: '',
+              password: '',
               salary: 5000,
               departmentId: 1,
               roleType: 'Employee',
-              jobTitle: '',
-              branchLocation: '',
-              clerkLevel: 'Clerk',
             });
             setShowModal(true);
           }}
@@ -203,6 +200,30 @@ const ManagerEmployees = () => {
                       required
                     />
                   </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                  <div>
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-input"
+                      value={formData.email}
+                      onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  {!editingEmployee && (
+                    <div>
+                      <label className="form-label">Password</label>
+                      <input
+                        type="password"
+                        className="form-input"
+                        value={formData.password}
+                        onChange={e => setFormData({ ...formData, password: e.target.value })}
+                        required={!editingEmployee}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
                   <div>
