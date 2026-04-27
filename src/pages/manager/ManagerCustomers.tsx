@@ -142,9 +142,9 @@ const ManagerCustomers = () => {
             </tr>
           </thead>
           <tbody>
-            {customers.map((customer: any) => (
+            {customers.map((customer: any, index: number) => (
               <tr key={customer.customerid || customer.id}>
-                <td>{customer.customerid || customer.id || '-'}</td>
+                <td>{index + 1}</td>
                 <td>{customer.firstname && customer.lastname ? `${customer.firstname} ${customer.lastname}` : '-'}</td>
                 <td>{customer.nationalid || '-'}</td>
                 <td>{customer.gender || '-'}</td>
