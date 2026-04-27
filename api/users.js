@@ -90,27 +90,21 @@ export default async function handler(request, response) {
       }
 
       if (action === 'employees') {
-        const result = await pool.query('SELECT employeeid, firstname, lastname, gender, salary, email, departmentid FROM employee');
-        const employeesWithRole = await Promise.all(result.rows.map(async (employee) => {
-          const role = await getEmployeeRole(employee.employeeid);
-          let departmentname = null;
-          try {
-            const dept = await pool.query('SELECT departmentname FROM department WHERE departmentid = $1', [employee.departmentid]);
-            departmentname = dept.rows[0]?.departmentname;
-          } catch {}
-          return {
-            employeeid: employee.employeeid,
-            firstname: employee.firstname,
-            lastname: employee.lastname,
-            gender: employee.gender,
-            salary: employee.salary,
-            email: employee.email,
-            departmentid: employee.departmentid,
-            ...role,
-            departmentname,
-          };
-        }));
-        return response.status(200).json(employeesWithRole);
+        try {
+          const result = await pool.query('SELECT employeeid, firstname, lastname, gender, salary FROM employee ORDER BY employeeid');
+          const employees = result.rows.map(emp => ({
+            employeeid: emp.employeeid,
+            firstname: emp.firstname,
+            lastname: emp.lastname,
+            gender: emp.gender,
+            salary: emp.salary,
+            roleType: 'Employee',
+          }));
+          return response.status(200).json(employees);
+        } catch (err) {
+          console.error('Error fetching employees:', err);
+          return response.status(500).json({ message: 'Failed to fetch employees', error: err.message });
+        }
       }
 
       if (action === 'accounts') {
