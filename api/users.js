@@ -225,6 +225,10 @@ export default async function handler(request, response) {
         return response.status(400).json({ message: 'First name and last name are required' });
       }
       
+      try {
+        await pool.query(`SELECT setval('employee_employeeid_seq', (SELECT COALESCE(MAX(employeeid), 0) + 1 FROM employee))`);
+      } catch {}
+      
       const result = await pool.query(
         `INSERT INTO employee (firstname, lastname, gender, salary)
          VALUES ($1, $2, $3, $4) RETURNING employeeid`,
