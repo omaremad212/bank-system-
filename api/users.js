@@ -208,13 +208,19 @@ export default async function handler(request, response) {
       
       try {
         await pool.query('DELETE FROM customer_phone WHERE customerid = $1', [customerId]);
+        
+        const accounts = await pool.query('SELECT accountid FROM bank_account WHERE customerid = $1', [customerId]);
+        for (const acc of accounts.rows) {
+          await pool.query('DELETE FROM savings_account WHERE accountid = $1', [acc.accountid]);
+          await pool.query('DELETE FROM checking_account WHERE accountid = $1', [acc.accountid]);
+        }
         await pool.query('DELETE FROM bank_account WHERE customerid = $1', [customerId]);
         await pool.query('DELETE FROM loan_application WHERE customerid = $1', [customerId]);
         await pool.query('DELETE FROM customer WHERE customerid = $1', [customerId]);
         return response.status(200).json({ message: 'Customer deleted', customerId });
       } catch (error) {
         console.error('Delete customer error:', error);
-        return response.status(500).json({ message: 'Failed to delete customer' });
+        return response.status(500).json({ message: 'Failed to delete customer: ' + error.message });
       }
     }
 
