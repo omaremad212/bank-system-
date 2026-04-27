@@ -240,17 +240,24 @@ export default async function handler(request, response) {
     }
 
     if (method === 'POST' && action === 'accounts') {
-      const { accountNumber, accountType, customerId, branchId } = request.body;
+      const { accountType, customerId, branchId } = request.body;
       
-      const existing = await pool.query('SELECT accountid FROM bank_account WHERE accountnumber = $1', [accountNumber]);
-      if (existing.rows.length > 0) {
-        return response.status(400).json({ message: 'Account number already exists' });
+      if (!accountType || !customerId) {
+        return response.status(400).json({ message: 'Account type and customer are required' });
       }
+
+      const lastAccount = await pool.query('SELECT accountnumber FROM bank_account ORDER BY accountid DESC LIMIT 1');
+      let nextNumber = 1001;
+      if (lastAccount.rows.length > 0) {
+        const lastNum = parseInt(lastAccount.rows[0].accountnumber.replace('ACC-', ''));
+        nextNumber = lastNum + 1;
+      }
+      const accountNumber = `ACC-${nextNumber}`;
 
       const result = await pool.query(
         `INSERT INTO bank_account (accountnumber, accounttype, customerid, branchid, opendate)
          VALUES ($1, $2, $3, $4, CURRENT_DATE) RETURNING accountid`,
-        [accountNumber, accountType, customerId, branchId]
+        [accountNumber, accountType, customerId, branchId || 1]
       );
 
       const accountId = result.rows[0].accountid;
@@ -261,7 +268,7 @@ export default async function handler(request, response) {
         await pool.query('INSERT INTO checking_account (accountid, overdraftlimit) VALUES ($1, 1000)', [accountId]);
       }
 
-      return response.status(201).json({ message: 'Account created', accountId });
+      return response.status(201).json({ message: 'Account created', accountId, accountNumber });
     }
 
     if (method === 'DELETE' && action === 'accounts') {
