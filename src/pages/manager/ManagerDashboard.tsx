@@ -17,6 +17,7 @@ const ManagerDashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
+      console.log('Dashboard: Starting to fetch stats...');
       try {
         const [customers, accounts, transactions, loans, employees] = await Promise.all([
           api.admin.getCustomers(),
@@ -26,11 +27,28 @@ const ManagerDashboard = () => {
           api.admin.getEmployees(),
         ]);
         
+        console.log('Dashboard fetched data:', {
+          customers,
+          accounts,
+          transactions,
+          loans,
+          employees
+        });
+        
         const totalBalance = Array.isArray(accounts) 
           ? accounts.reduce((sum: number, acc: any) => sum + (acc.balance || 0), 0)
           : 0;
         
         setStats({
+          customers: Array.isArray(customers) ? customers.length : 0,
+          accounts: Array.isArray(accounts) ? accounts.length : 0,
+          transactions: Array.isArray(transactions) ? transactions.length : 0,
+          loans: Array.isArray(loans) ? loans.length : 0,
+          employees: Array.isArray(employees) ? employees.length : 0,
+          totalBalance,
+        });
+        
+        console.log('Stats set to:', {
           customers: Array.isArray(customers) ? customers.length : 0,
           accounts: Array.isArray(accounts) ? accounts.length : 0,
           transactions: Array.isArray(transactions) ? transactions.length : 0,
