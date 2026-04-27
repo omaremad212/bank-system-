@@ -59,7 +59,7 @@ const ManagerDashboard = () => {
     <div>
       <div className="welcome-hero">
         <h1>Welcome, {user?.name}!</h1>
-        <p>Branch Manager Dashboard - Full Admin Access</p>
+        <p>{user?.roleType || 'Manager'} Dashboard</p>
         <div className="welcome-hero-info">
           <div className="welcome-info-item">
             <span>&#x1F3E2;</span>
