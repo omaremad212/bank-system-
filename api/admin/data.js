@@ -130,11 +130,27 @@ export default async function handler(request, response) {
       }
 
       if (action === 'transactions') {
-        const { amount, transactionType, accountId, relatedAccountId, atmId } = request.body;
+        const { amount, transactionType, accountId, atmId } = request.body;
+        
+        if (!amount || !transactionType || !accountId) {
+          return response.status(400).json({ message: 'Amount, transaction type and account are required' });
+        }
+        
+        if (transactionType === 'Withdraw') {
+          const bal = await pool.query(
+            'SELECT COALESCE(SUM(CASE WHEN transactiontype = $1 THEN amount ELSE -amount END) as balance FROM transactions WHERE accountid = $2',
+            ['Deposit', accountId]
+          );
+          const currentBalance = parseFloat(bal.rows[0]?.balance || 0);
+          if (currentBalance < amount) {
+            return response.status(400).json({ message: 'Insufficient balance' });
+          }
+        }
+        
         const result = await pool.query(
-          `INSERT INTO transactions (amount, transactiontype, accountid, relatedaccountid, atmid, date_time)
-           VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) RETURNING transactionid`,
-          [amount, transactionType, accountId, relatedAccountId, atmId]
+          `INSERT INTO transactions (amount, transactiontype, accountid, atmid, date_time)
+           VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING transactionid`,
+          [amount, transactionType, accountId, atmId || null]
         );
         return response.status(201).json({ message: 'Transaction created', transactionId: result.rows[0].transactionid });
       }

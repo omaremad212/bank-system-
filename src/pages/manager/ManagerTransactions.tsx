@@ -6,6 +6,7 @@ const ManagerTransactions = () => {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     accountId: 0,
     transactionType: 'Deposit',
@@ -34,8 +35,10 @@ const ManagerTransactions = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     try {
-      await api.admin.createTransaction(formData);
+      const result = await api.admin.createTransaction(formData);
+      console.log('Transaction created:', result);
       setShowModal(false);
       setFormData({
         accountId: 0,
@@ -44,8 +47,10 @@ const ManagerTransactions = () => {
         atmId: 1,
       });
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating transaction:', error);
+      const message = error?.response?.data?.message || error?.message || 'Failed to create transaction';
+      setError(message);
     }
   };
 
@@ -64,7 +69,7 @@ const ManagerTransactions = () => {
           <h2 style={{ color: '#1a365d', marginBottom: '0.5rem' }}>Transaction History</h2>
           <p style={{ color: '#718096' }}>View all transactions</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <button className="btn btn-primary" onClick={() => { setError(''); setShowModal(true); }}>
           <span>+</span> Create Transaction
         </button>
       </div>
@@ -146,6 +151,11 @@ const ManagerTransactions = () => {
                     required
                   />
                 </div>
+                {error && (
+                  <div style={{ color: 'red', marginTop: '1rem', padding: '0.5rem', backgroundColor: '#fee', borderRadius: '4px' }}>
+                    {error}
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
