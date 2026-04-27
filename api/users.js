@@ -82,14 +82,15 @@ export default async function handler(request, response) {
       if (action === 'employees') {
         const getEmployeeRole = async (employeeId) => {
           try {
-            const manager = await pool.query('SELECT * FROM manager_details WHERE employeeid = $1', [employeeId]);
+            const manager = await pool.query('SELECT 1 FROM manager_details WHERE employeeid = $1 LIMIT 1', [employeeId]);
             if (manager.rows.length > 0) return { roleType: 'Manager' };
-            const teller = await pool.query('SELECT * FROM teller_details WHERE employeeid = $1', [employeeId]);
+            const teller = await pool.query('SELECT 1 FROM teller_details WHERE employeeid = $1 LIMIT 1', [employeeId]);
             if (teller.rows.length > 0) return { roleType: 'Teller' };
-            const clerk = await pool.query('SELECT * FROM clerk_details WHERE employeeid = $1', [employeeId]);
+            const clerk = await pool.query('SELECT 1 FROM clerk_details WHERE employeeid = $1 LIMIT 1', [employeeId]);
             if (clerk.rows.length > 0) return { roleType: 'Clerk' };
             return { roleType: 'Employee' };
           } catch (e) {
+            console.error('Error getting employee role:', e);
             return { roleType: 'Employee' };
           }
         };

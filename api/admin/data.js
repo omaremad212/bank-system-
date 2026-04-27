@@ -64,20 +64,24 @@ export default async function handler(request, response) {
       }
 
       if (action === 'transactions') {
-        const result = await pool.query(
-          'SELECT t.transactionid, t.amount, t.date_time, t.transactiontype, t.accountid, t.relatedaccountid, t.atmid, ba.accountnumber FROM transactions t LEFT JOIN bank_account ba ON t.accountid = ba.accountid ORDER BY t.date_time DESC LIMIT 100'
-        );
-        const transactions = result.rows.map(row => ({
-          transactionid: row.transactionid,
-          amount: row.amount,
-          date_time: row.date_time,
-          transactiontype: row.transactiontype,
-          accountid: row.accountid,
-          relatedaccountid: row.relatedaccountid,
-          atmid: row.atmid,
-          accountnumber: row.accountnumber,
-        }));
-        return response.status(200).json(transactions);
+        try {
+          const result = await pool.query(
+            'SELECT t.transactionid, t.amount, t.date_time, t.transactiontype, t.accountid, COALESCE(t.atmid, 0) as atmid, ba.accountnumber FROM transactions t LEFT JOIN bank_account ba ON t.accountid = ba.accountid ORDER BY t.date_time DESC LIMIT 100'
+          );
+          const transactions = result.rows.map(row => ({
+            transactionid: row.transactionid,
+            amount: row.amount,
+            date_time: row.date_time,
+            transactiontype: row.transactiontype,
+            accountid: row.accountid,
+            atmid: row.atmid,
+            accountnumber: row.accountnumber,
+          }));
+          return response.status(200).json(transactions);
+        } catch (err) {
+          console.error('Transactions query error:', err);
+          return response.status(200).json([]);
+        }
       }
 
       if (action === 'loans') {
