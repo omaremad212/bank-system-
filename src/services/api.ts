@@ -13,14 +13,14 @@ const getAuthHeaders = () => {
 
 export const signup = {
   customer: async (data: { nationalId: string; firstName: string; lastName: string; gender: string; street?: string; area?: string; state?: string; dateOfBirth?: string; password: string }) => {
-    const response = await axios.post(`${API_BASE}/signup`, { role: 'customer', ...data }, {
+    const response = await axios.post(`${API_BASE}/signup/customer`, data, {
       headers: { 'Content-Type': 'application/json' }
     });
     return response.data;
   },
   
   employee: async (data: { firstName: string; lastName: string; gender: string; email: string; departmentId?: number; password: string }) => {
-    const response = await axios.post(`${API_BASE}/signup`, { role: 'employee', ...data }, {
+    const response = await axios.post(`${API_BASE}/signup/employee`, data, {
       headers: { 'Content-Type': 'application/json' }
     });
     return response.data;
