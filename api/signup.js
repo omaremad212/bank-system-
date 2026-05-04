@@ -25,6 +25,8 @@ export default async function handler(request, response) {
         return response.status(400).json({ message: 'Required fields missing' });
       }
 
+      console.log('Attempting to register customer:', { nationalId, firstName, lastName });
+
       const existing = await pool.query('SELECT customerid FROM customer WHERE nationalid = $1', [nationalId]);
       if (existing.rows.length > 0) {
         return response.status(400).json({ message: 'National ID already registered' });
@@ -33,8 +35,9 @@ export default async function handler(request, response) {
       const result = await pool.query(
         `INSERT INTO customer (nationalid, firstname, lastname, gender, street, area, state, dateofbirth, password)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING customerid`,
-        [nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, password]
+        [nationalId, firstName, lastName, gender || null, street || null, area || null, state || null, dateOfBirth || null, password]
       );
+      console.log('Customer inserted successfully:', result.rows[0]);
 
       return response.status(201).json({ 
         message: 'Customer account created',
@@ -70,7 +73,12 @@ export default async function handler(request, response) {
 
     return response.status(400).json({ message: 'Invalid role' });
   } catch (error) {
-    console.error('Signup error:', error);
-    return response.status(500).json({ message: 'Registration failed' });
+    console.error('Signup error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    const errorMessage = error.message || 'Registration failed';
+    return response.status(500).json({ message: errorMessage, error: error.message });
   }
 }
