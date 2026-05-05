@@ -13,7 +13,7 @@ const getAuthHeaders = () => {
 
 export const signup = {
   customer: async (data: { nationalId: string; firstName: string; lastName: string; gender: string; street?: string; area?: string; state?: string; dateOfBirth?: string; password: string }) => {
-    const response = await axios.post(`${API_BASE}/signup/customer`, data, {
+    const response = await axios.post(`${API_BASE}/signup`, data, {
       headers: { 'Content-Type': 'application/json' }
     });
     return response.data;

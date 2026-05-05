@@ -8,77 +8,74 @@ const pool = new Pool({
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
-    return response.status(405).json({ message: 'Method not allowed' });
-  }
-
-  const { role, ...data } = request.body;
-
-  if (!role || !['customer', 'employee'].includes(role)) {
-    return response.status(400).json({ message: 'Role is required (customer or employee)' });
+    return response.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    if (role === 'customer') {
-      const { nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, password } = data;
+    const { nationalId, firstName, lastName, gender, street, area, state, dateOfBirth, password } = request.body;
 
-      if (!nationalId || !firstName || !lastName || !password) {
-        return response.status(400).json({ message: 'Required fields missing' });
-      }
+    console.log('Signup request:', { nationalId, firstName, lastName });
 
-      console.log('Attempting to register customer:', { nationalId, firstName, lastName });
-
-      const existing = await pool.query('SELECT customerid FROM customer WHERE nationalid = $1', [nationalId]);
-      if (existing.rows.length > 0) {
-        return response.status(400).json({ message: 'National ID already registered' });
-      }
-
-      const result = await pool.query(
-        `INSERT INTO customer (nationalid, firstname, lastname, gender, street, area, state, dateofbirth, password)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING customerid`,
-        [nationalId, firstName, lastName, gender || null, street || null, area || null, state || null, dateOfBirth || null, password]
-      );
-      console.log('Customer inserted successfully:', result.rows[0]);
-
-      return response.status(201).json({ 
-        message: 'Customer account created',
-        userId: result.rows[0].customerid,
-        role: 'customer'
-      });
+    // Validation
+    if (!nationalId || nationalId.trim() === '') {
+      return response.status(400).json({ error: 'National ID is required' });
+    }
+    if (!firstName || firstName.trim() === '') {
+      return response.status(400).json({ error: 'First name is required' });
+    }
+    if (!lastName || lastName.trim() === '') {
+      return response.status(400).json({ error: 'Last name is required' });
+    }
+    if (!password || password.trim() === '') {
+      return response.status(400).json({ error: 'Password is required' });
     }
 
-    if (role === 'employee') {
-      const { firstName, lastName, gender, email, departmentId, password } = data;
+    // Check if national ID already exists
+    const existingCheck = await pool.query(
+      'SELECT customerid FROM customer WHERE nationalid = $1',
+      [nationalId]
+    );
 
-      if (!firstName || !lastName || !email || !password) {
-        return response.status(400).json({ message: 'Required fields missing' });
-      }
-
-      const existing = await pool.query('SELECT employeeid FROM employee WHERE email = $1', [email]);
-      if (existing.rows.length > 0) {
-        return response.status(400).json({ message: 'Email already registered' });
-      }
-
-      const result = await pool.query(
-        `INSERT INTO employee (firstname, lastname, gender, email, departmentid, password)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING employeeid`,
-        [firstName, lastName, gender, email, departmentId || 1, password]
-      );
-
-      return response.status(201).json({ 
-        message: 'Employee account created',
-        userId: result.rows[0].employeeid,
-        role: 'employee'
-      });
+    if (existingCheck.rows.length > 0) {
+      return response.status(409).json({ error: 'National ID already registered' });
     }
 
-    return response.status(400).json({ message: 'Invalid role' });
-  } catch (error) {
-    console.error('Signup error details:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
+    // Insert new customer
+    const result = await pool.query(
+      `INSERT INTO customer (nationalid, firstname, lastname, gender, street, area, state, dateofbirth, password)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING customerid, nationalid, firstname, lastname`,
+      [
+        nationalId,
+        firstName,
+        lastName,
+        gender || 'Male',
+        street || null,
+        area || null,
+        state || null,
+        dateOfBirth || null,
+        password
+      ]
+    );
+
+    console.log('Customer created:', result.rows[0]);
+
+    const customer = result.rows[0];
+
+    return response.status(201).json({
+      success: true,
+      message: 'Customer account created successfully',
+      customer: {
+        id: customer.customerid,
+        nationalId: customer.nationalid,
+        name: `${customer.firstname} ${customer.lastname}`
+      }
     });
-    const errorMessage = error.message || 'Registration failed';
-    return response.status(500).json({ message: errorMessage, error: error.message });
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    return response.status(500).json({ 
+      error: 'Registration failed',
+      details: error.message 
+    });
   }
 }
