@@ -18,13 +18,6 @@ export const signup = {
     });
     return response.data;
   },
-  
-  employee: async (data: { firstName: string; lastName: string; gender: string; email: string; departmentId?: number; password: string }) => {
-    const response = await axios.post(`${API_BASE}/signup/employee`, data, {
-      headers: { 'Content-Type': 'application/json' }
-    });
-    return response.data;
-  },
 };
 
 export const login = {
